@@ -87,7 +87,7 @@ function AddClientForm() {
                 <SubmitButton />
             </CardFooter>
             </form>
-        </Card>>
+        </Card>
     )
 }
 
