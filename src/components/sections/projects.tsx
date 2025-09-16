@@ -1,10 +1,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Project = {
   id: string;
@@ -14,37 +14,46 @@ type Project = {
   link: string | null;
 };
 
-const ProjectCard = ({ project }: { project: Project }) => {
+const ProjectCard = ({ project, index }: { project: Project; index: number }) => {
   const Wrapper = project.link ? Link : 'div';
   const props = project.link ? { href: project.link, target: "_blank", rel: "noopener noreferrer" } : {};
+  
+  // Base styles
+  let baseStyles = "relative shrink-0 w-[300px] h-[400px] md:w-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 ease-in-out";
+  // Perspective styles based on index
+  let perspectiveStyles = "";
+  if (index === 0) perspectiveStyles = "md:rotate-y-15";
+  if (index === 1) perspectiveStyles = "md:rotate-y-5";
+  if (index === 3) perspectiveStyles = "md:rotate-y--5";
+  if (index === 4) perspectiveStyles = "md:rotate-y--15";
+
 
   return (
-    <Wrapper {...props}>
-       <Card className="overflow-hidden h-full group relative flex flex-col justify-end text-white min-h-[350px]">
-        {project.image_url ? (
-          <Image
-            src={project.image_url}
-            alt={`Image for ${project.title}`}
-            fill
-            className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-muted z-0 flex items-center justify-center">
-            <p className="text-muted-foreground">No Image</p>
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10"></div>
-        <div className="p-6 z-20">
-          <h3 className="text-2xl font-bold">{project.title}</h3>
-          {project.description && <p className="mt-2 text-white/80 line-clamp-2">{project.description}</p>}
-           {project.link && (
-            <div className="mt-4 flex items-center text-sm font-semibold opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-              View Project <ArrowRight className="ml-2 h-4 w-4" />
+    <div className="flex flex-col items-center gap-4 shrink-0">
+        <Wrapper {...props} className={cn(baseStyles, perspectiveStyles, "group")}>
+            {project.image_url ? (
+            <Image
+                src={project.image_url}
+                alt={`Image for ${project.title}`}
+                fill
+                className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
+            />
+            ) : (
+            <div className="absolute inset-0 bg-muted flex items-center justify-center">
+                <p className="text-muted-foreground">No Image</p>
             </div>
-          )}
+            )}
+             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+             {project.link && (
+                <div className="absolute bottom-4 right-4 z-10 p-2 bg-background/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-sm">
+                    <ArrowRight className="h-5 w-5 text-foreground" />
+                </div>
+            )}
+        </Wrapper>
+        <div className="text-center">
+            <p className="font-semibold text-lg">{project.title}</p>
         </div>
-      </Card>
-    </Wrapper>
+    </div>
   )
 }
 
@@ -54,12 +63,13 @@ export async function Projects() {
   const { data: projects, error } = await supabase
     .from('projects')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(5);
 
   return (
-    <section id="projects" className="w-full py-12 md:py-24 lg:py-32">
+    <section id="projects" className="w-full py-12 md:py-24 lg:py-32 overflow-hidden">
       <div className="container mx-auto px-4 md:px-6">
-        <div className="flex flex-col items-center justify-center space-y-4 text-center">
+        <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
           <div className="space-y-2">
             <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight font-headline">Our Work</h2>
             <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
@@ -67,17 +77,50 @@ export async function Projects() {
             </p>
           </div>
         </div>
-         {error && <p className="text-center text-destructive py-4">Could not load projects.</p>}
+      </div>
+
+       {error && <p className="text-center text-destructive py-4">Could not load projects.</p>}
+       
         {projects && projects.length > 0 ? (
-            <div className="mx-auto grid max-w-5xl items-stretch gap-6 py-12 sm:grid-cols-2 md:gap-8 lg:max-w-none lg:grid-cols-3">
-                {projects.map((project) => (
-                    <ProjectCard key={project.id} project={project} />
-                ))}
+            <div 
+                className="relative flex items-center justify-center"
+                style={{ perspective: '2000px' }}
+            >
+                <div className="flex items-center justify-center gap-8 md:-gap-16 lg:-gap-24 overflow-x-auto pb-8 scrollbar-hide">
+                    {projects.map((project, index) => (
+                        <ProjectCard key={project.id} project={project} index={index} />
+                    ))}
+                </div>
             </div>
         ) : (
             !error && <p className="text-center text-muted-foreground py-12">No projects have been added yet.</p>
         )}
-      </div>
     </section>
   );
 }
+
+// Custom styles for 3D transforms - add to a global stylesheet or use a style tag if needed.
+// We'll try with tailwind arbitrary values first.
+// In tailwind.config.ts, under theme.extend, add:
+// rotate: {
+//   'y-15': 'rotateY(15deg)',
+//   'y--15': 'rotateY(-15deg)',
+//   'y-5': 'rotateY(5deg)',
+//   'y--5': 'rotateY(-5deg)',
+// }
+
+// And add a utility for scrollbar-hide
+// plugins: [
+//   plugin(function({ addUtilities }) {
+//     addUtilities({
+//       '.scrollbar-hide': {
+//         /* Firefox */
+//         'scrollbar-width': 'none',
+//         /* Safari and Chrome */
+//         '&::-webkit-scrollbar': {
+//           display: 'none'
+//         }
+//       }
+//     })
+//   })
+// ],
