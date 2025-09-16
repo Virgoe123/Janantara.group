@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 const Logo = ({ scrolled }: { scrolled: boolean }) => (
   <Link href="/" className="flex items-center gap-2" prefetch={false}>
     <Image src="https://res.cloudinary.com/dye07cjmn/image/upload/v1757992101/96b46217-0642-41b8-b06a-0ba5cb0d6572.png" alt="Janantara Logo" width={32} height={32} />
-    <span className={cn("text-xl font-bold", scrolled ? "text-foreground" : "text-[#F9F4F0]")}>Janantara</span>
+    <span className={cn("text-xl font-bold font-headline", scrolled ? "text-foreground" : "text-[#F9F4F0]")}>Janantara</span>
   </Link>
 );
 
