@@ -122,7 +122,7 @@ export async function getClients() {
 const ProjectSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters."),
   description: z.string().optional(),
-  clientId: z.string().uuid("Invalid client ID.").optional().or(z.literal('')),
+  clientId: z.string().uuid("Invalid client ID.").optional().or(z.literal('none')).or(z.literal('')),
   image: z.instanceof(File).refine(file => file.size > 0, "Project image is required.").refine(file => file.size < 4 * 1024 * 1024, "Image must be less than 4MB."),
 });
 
@@ -168,7 +168,7 @@ export async function addProject(prevState: LoginState, formData: FormData) {
     const { error: insertError } = await supabase.from('projects').insert({
         title,
         description,
-        client_id: clientId || null,
+        client_id: clientId === 'none' || clientId === '' ? null : clientId,
         image_url: imageUrl,
     });
 
