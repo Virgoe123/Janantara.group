@@ -7,12 +7,13 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/co
 import { useIsMobile } from "@/hooks/use-mobile";
 import React from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Wind } from "lucide-react";
 
 const Logo = () => (
   <Link href="/" className="flex items-center gap-2" prefetch={false}>
-    <Image src="https://res.cloudinary.com/dye07cjmn/image/upload/v1757992101/96b46217-0642-41b8-b06a-0ba5cb0d6572.png" alt="Janantara Logo" width={40} height={40} className="h-10 w-10" />
+    <Wind className="h-6 w-6" />
     <span className="text-xl font-bold tracking-tight text-foreground">
-      Janantara
+      Webelix
     </span>
   </Link>
 );
@@ -26,12 +27,12 @@ const NavLinks = ({
 }) => (
   <nav className={className}>
     <Link
-      href="/#projects"
+      href="/#home"
       className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       onClick={onLinkClick}
       prefetch={false}
     >
-      Projects
+      HOME
     </Link>
     <Link
       href="/#services"
@@ -39,15 +40,23 @@ const NavLinks = ({
       onClick={onLinkClick}
       prefetch={false}
     >
-      Services
+      SERVICES
     </Link>
     <Link
-      href="/#about"
+      href="/#projects"
       className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       onClick={onLinkClick}
       prefetch={false}
     >
-      About
+      PROJECTS
+    </Link>
+     <Link
+      href="/#pricing"
+      className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+      onClick={onLinkClick}
+      prefetch={false}
+    >
+      PRICING
     </Link>
     <Link
       href="/#testimonials"
@@ -55,25 +64,25 @@ const NavLinks = ({
       onClick={onLinkClick}
       prefetch={false}
     >
-      Testimonials
+      REVIEW
     </Link>
     <Link
-      href="/#contact"
+      href="/#faq"
       className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       onClick={onLinkClick}
       prefetch={false}
     >
-      Contact
+      FAQ
     </Link>
   </nav>
 );
 
 const DesktopHeader = () => (
-  <header className="hidden h-16 items-center justify-between px-4 md:flex md:px-6 sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+  <header className="hidden h-20 items-center justify-between px-4 md:flex md:px-8 absolute top-0 z-50 w-full bg-transparent">
     <Logo />
     <div className="flex items-center gap-6">
-      <NavLinks className="flex items-center gap-6 text-sm" />
-      <ThemeToggle />
+      <NavLinks className="flex items-center gap-x-6 text-sm" />
+      {/* <ThemeToggle /> */}
     </div>
   </header>
 );
@@ -82,18 +91,18 @@ const MobileHeader = () => {
   const [isOpen, setIsOpen] = React.useState(false);
 
   return (
-    <header className="flex h-16 items-center justify-between px-4 md:hidden sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="flex h-16 items-center justify-between px-4 md:hidden absolute top-0 z-50 w-full bg-transparent">
       <Logo />
       <div className="flex items-center gap-2">
-        <ThemeToggle />
+        {/* <ThemeToggle /> */}
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon">
+            <Button variant="ghost" size="icon">
               <MenuIcon className="h-6 w-6" />
               <span className="sr-only">Toggle navigation menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="right">
+          <SheetContent side="right" className="bg-background">
             <SheetHeader>
               <SheetTitle className="sr-only">Mobile Navigation</SheetTitle>
             </SheetHeader>
@@ -114,7 +123,8 @@ const MobileHeader = () => {
 export function Header() {
   const isMobile = useIsMobile();
   
-  if (isMobile === undefined) return null;
+  // Return a placeholder or null during SSR to avoid hydration mismatch
+  if (isMobile === undefined) return <div className="h-16 md:h-20" />;
 
   return isMobile ? <MobileHeader /> : <DesktopHeader />;
 }
