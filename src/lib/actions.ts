@@ -7,7 +7,8 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import * as LucideIcons from "lucide-react";
-import {experimental_useFormState as useFormState} from 'react-dom'
+import {experimental_useFormState as useFormState} from 'react-dom';
+import { suggestServiceIcon } from '@/ai/flows/suggest-service-icon';
 
 export async function submitContactForm(data: { name: string; email: string; message:string }) {
   try {
@@ -217,6 +218,7 @@ export async function getProjects() {
 const ServiceSchema = z.object({
   title: z.string().min(2, "Title is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
+  icon: z.string().optional(),
 });
 
 export async function addService(prevState: LoginState, formData: FormData): Promise<LoginState> {
@@ -232,7 +234,22 @@ export async function addService(prevState: LoginState, formData: FormData): Pro
         return { errors: validatedFields.error.flatten().fieldErrors, message: 'Validation failed.', success: false };
     }
 
-    const { error } = await supabase.from('services').insert([validatedFields.data]);
+    // Suggest an icon using AI
+    let iconName = 'Wrench'; // Default icon
+    try {
+        const iconSuggestion = await suggestServiceIcon({ serviceTitle: validatedFields.data.title });
+        iconName = iconSuggestion.iconName;
+    } catch (aiError) {
+        console.error("AI icon suggestion failed:", aiError);
+        // Proceed with default icon, don't block the user
+    }
+
+    const serviceData = {
+        ...validatedFields.data,
+        icon: iconName,
+    };
+
+    const { error } = await supabase.from('services').insert([serviceData]);
 
     if (error) {
         return { message: `Database Error: ${error.message}`, success: false };

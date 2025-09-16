@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useForm, useFormState } from "react-hook-form";
 import { useFormStatus } from "react-dom";
-import { addService, getServices, deleteService, LoginState } from "@/lib/actions";
+import { addService, getServices, deleteService } from "@/lib/actions";
 import {
   Card,
   CardContent,
@@ -38,24 +38,16 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Trash2 } from "lucide-react";
+import { AlertCircle, Trash2, type LucideIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import * as LucideIcons from "lucide-react";
 
 type Service = {
   id: string;
   title: string;
   description: string;
+  icon: string | null;
 };
-
-
-function SubmitButton() {
-    const { pending } = useFormStatus();
-    return (
-        <Button type="submit" disabled={pending}>
-            {pending ? "Adding Service..." : "Add Service"}
-        </Button>
-    )
-}
 
 function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
     const { toast } = useToast();
@@ -64,15 +56,17 @@ function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
 
 
     useEffect(() => {
-      if (isSubmitSuccessful && result?.success) {
-        if(result.message) {
-            toast({
-              title: "Success!",
-              description: result.message,
-            });
+      if (isSubmitSuccessful) {
+        if (result?.success) {
+            if(result.message) {
+                toast({
+                  title: "Success!",
+                  description: result.message,
+                });
+            }
+            reset();
+            onServiceAdded();
         }
-        reset();
-        onServiceAdded();
       }
     }, [isSubmitSuccessful, result, onServiceAdded, toast, reset]);
 
@@ -81,7 +75,7 @@ function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
             <CardHeader>
             <CardTitle>Add New Service</CardTitle>
             <CardDescription>
-                Fill out the details for the new service.
+                Fill out the details for the new service. An icon will be automatically generated.
             </CardDescription>
             </CardHeader>
             <form action={addService}>
@@ -138,6 +132,7 @@ function ServiceList({ services, onServiceDeleted, isLoading }: { services: Serv
             <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[50px]">Icon</TableHead>
                     <TableHead>Title</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -146,6 +141,7 @@ function ServiceList({ services, onServiceDeleted, isLoading }: { services: Serv
                 <TableBody>
                     {[...Array(3)].map((_, i) => (
                         <TableRow key={i}>
+                            <TableCell><Skeleton className="h-6 w-6" /></TableCell>
                             <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                             <TableCell><Skeleton className="h-5 w-full" /></TableCell>
                             <TableCell className="text-right"><Skeleton className="h-8 w-8 inline-block" /></TableCell>
@@ -166,44 +162,51 @@ function ServiceList({ services, onServiceDeleted, isLoading }: { services: Serv
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-[50px]">Icon</TableHead>
             <TableHead>Title</TableHead>
             <TableHead>Description</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {services.map((service) => (
-            <TableRow key={service.id} className={isDeleting === service.id ? 'opacity-50' : ''}>
-              <TableCell className="font-medium">{service.title}</TableCell>
-              <TableCell>{service.description}</TableCell>
-              <TableCell className="text-right">
-                 <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" disabled={!!isDeleting}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the service "{service.title}".
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => handleDelete(service.id)}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </TableCell>
-            </TableRow>
-          ))}
+          {services.map((service) => {
+            const Icon = service.icon ? (LucideIcons[service.icon as keyof typeof LucideIcons] as LucideIcon) : LucideIcons.Wrench;
+            return (
+              <TableRow key={service.id} className={isDeleting === service.id ? 'opacity-50' : ''}>
+                <TableCell>
+                  <Icon className="h-5 w-5 text-muted-foreground" />
+                </TableCell>
+                <TableCell className="font-medium">{service.title}</TableCell>
+                <TableCell>{service.description}</TableCell>
+                <TableCell className="text-right">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" disabled={!!isDeleting}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete the service "{service.title}".
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDelete(service.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </TableCell>
+              </TableRow>
+            )
+          })}
         </TableBody>
       </Table>
     </div>

@@ -2,11 +2,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
+import * as LucideIcons from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 
 type Service = {
     id: number;
     title: string;
     description: string;
+    icon: string | null;
 };
 
 export async function Services() {
@@ -28,16 +31,20 @@ export async function Services() {
         {error && <p className="text-center text-destructive py-4">Could not load services.</p>}
         {services && services.length > 0 ? (
             <div className="mx-auto grid max-w-5xl items-start gap-8 py-12 sm:grid-cols-2 md:gap-12 lg:max-w-none lg:grid-cols-3">
-            {services.map((service: Service) => (
-                <Card key={service.id} className="text-left h-full flex flex-col">
-                  <CardHeader className="pt-8">
-                      <CardTitle>{service.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                      <p className="text-muted-foreground">{service.description}</p>
-                  </CardContent>
-                </Card>
-            ))}
+            {services.map((service: Service) => {
+                const Icon = service.icon ? (LucideIcons[service.icon as keyof typeof LucideIcons] as LucideIcon) : LucideIcons.Wrench;
+                return (
+                    <Card key={service.id} className="text-left h-full flex flex-col">
+                    <CardHeader className="pt-8">
+                        {Icon && <Icon className="h-8 w-8 text-primary mb-4" />}
+                        <CardTitle>{service.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                        <p className="text-muted-foreground">{service.description}</p>
+                    </CardContent>
+                    </Card>
+                )
+            })}
             </div>
         ) : (
             !error && <p className="text-center text-muted-foreground py-12">No services have been added yet.</p>
