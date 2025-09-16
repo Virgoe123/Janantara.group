@@ -9,6 +9,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Star } from "lucide-react";
 
 const testimonials = [
   {
@@ -16,18 +17,28 @@ const testimonials = [
     name: "Sarah Johnson",
     title: "CEO, Innovate Inc.",
     avatar: "https://picsum.photos/seed/c1/100/100",
+    rating: 5,
   },
   {
     quote: "The best web development agency I've ever worked with. They understood our vision perfectly and delivered a high-quality website on time and on budget. Highly recommended!",
     name: "Mark Lee",
     title: "Marketing Director, Tech Solutions",
     avatar: "https://picsum.photos/seed/c2/100/100",
+    rating: 5,
   },
   {
     quote: "Their design sense is impeccable. They transformed our outdated app into a modern, user-friendly experience that our customers love. The user engagement has skyrocketed.",
     name: "Jessica Chen",
     title: "Product Manager, Creative Co.",
     avatar: "https://picsum.photos/seed/c3/100/100",
+    rating: 5,
+  },
+    {
+    quote: "I can't recommend them enough. Their attention to detail and commitment to excellence is truly what sets them apart. We look forward to our next project together.",
+    name: "David Kim",
+    title: "Founder, Startup Hub",
+    avatar: "https://picsum.photos/seed/c4/100/100",
+    rating: 5,
   },
 ];
 
@@ -48,33 +59,38 @@ export function Testimonials() {
             align: "start",
             loop: true,
           }}
-          className="w-full max-w-4xl mx-auto py-12"
+          className="w-full max-w-5xl mx-auto py-12"
         >
-          <CarouselContent>
+          <CarouselContent className="-ml-4">
             {testimonials.map((testimonial, index) => (
-              <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/1">
-                <div className="p-1">
-                  <Card>
-                    <CardContent className="flex flex-col items-center justify-center p-6 text-center">
-                      <p className="text-lg italic">"{testimonial.quote}"</p>
-                      <div className="mt-4 flex items-center gap-4">
-                        <Avatar>
+              <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                  <Card className="h-full">
+                    <CardContent className="p-6 flex flex-col justify-between h-full">
+                      <div>
+                        <div className="flex gap-0.5 mb-4">
+                            {Array.from({ length: testimonial.rating }).map((_, i) => (
+                                <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                            ))}
+                        </div>
+                        <p className="text-muted-foreground text-base">"{testimonial.quote}"</p>
+                      </div>
+                      <div className="mt-6 flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-sm">{testimonial.name}</p>
+                          <p className="text-sm text-muted-foreground">{testimonial.title}</p>
+                        </div>
+                        <Avatar className="h-10 w-10">
                           <AvatarImage src={testimonial.avatar} alt={testimonial.name} data-ai-hint="client portrait"/>
                           <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
                         </Avatar>
-                        <div>
-                          <p className="font-semibold">{testimonial.name}</p>
-                          <p className="text-sm text-muted-foreground">{testimonial.title}</p>
-                        </div>
                       </div>
                     </CardContent>
                   </Card>
-                </div>
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
+          <CarouselPrevious className="hidden sm:flex" />
+          <CarouselNext className="hidden sm:flex" />
         </Carousel>
       </div>
     </section>
