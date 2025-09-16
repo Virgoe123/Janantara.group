@@ -1,8 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getServices } from "@/lib/actions";
 import * as LucideIcons from "lucide-react";
-import { cookies } from "next/headers";
 
 type IconName = keyof typeof LucideIcons;
 
@@ -15,8 +13,8 @@ const Icon = ({ name, className }: { name: IconName; className?: string }) => {
 };
 
 export async function Services() {
-  const cookieStore = cookies();
-  const { data: services, error } = await getServices(cookieStore);
+  // Supabase is removed, returning empty data
+  const { data: services, error } = { data: [], error: null };
 
   if (error || !services || services.length === 0) {
     return (
@@ -43,7 +41,7 @@ export async function Services() {
           </div>
         </div>
         <div className="mx-auto grid max-w-5xl items-start gap-8 py-12 sm:grid-cols-2 md:gap-12 lg:max-w-none lg:grid-cols-3">
-          {services.map((service) => (
+          {services.map((service: any) => (
             <Card key={service.id} className="text-center">
               <CardHeader className="items-center">
                 <Icon name={service.icon as IconName} className="h-10 w-10 text-primary" />

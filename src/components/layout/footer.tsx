@@ -1,14 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { cookies } from "next/headers";
 
 export async function Footer() {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = null; // Supabase is removed
 
   return (
     <footer className="border-t">

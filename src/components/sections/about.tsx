@@ -1,12 +1,10 @@
 
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getTeamMembers } from "@/lib/actions";
-import { cookies } from "next/headers";
 
 export async function About() {
-  const cookieStore = cookies();
-  const { data: teamMembers, error } = await getTeamMembers(cookieStore);
+  // Supabase is removed, returning empty data
+  const { data: teamMembers, error } = { data: [], error: null };
 
   return (
     <section id="about" className="w-full py-12 md:py-24 lg:py-32 bg-secondary">
@@ -26,7 +24,7 @@ export async function About() {
             <p className="text-muted-foreground text-center">Our team information is currently being updated.</p>
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-              {teamMembers.map((member) => (
+              {teamMembers.map((member: any) => (
                   <div key={member.id} className="flex flex-col items-center text-center">
                     <Avatar className="h-24 w-24 border-2 border-primary">
                       {member.image_url && <AvatarImage src={member.image_url} alt={member.name} data-ai-hint="professional portrait" />}

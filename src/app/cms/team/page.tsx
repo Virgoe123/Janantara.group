@@ -5,11 +5,10 @@ import { getTeamMembers } from "@/lib/actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import TeamView from "./team-view";
-import { cookies } from "next/headers";
 
 export default async function TeamPage() {
-  const cookieStore = cookies();
-  const { data: initialMembers, error } = await getTeamMembers(cookieStore);
+  // Supabase is removed, returning empty data
+  const { data: initialMembers, error } = { data: [], error: null };
 
   if (error) {
     return (

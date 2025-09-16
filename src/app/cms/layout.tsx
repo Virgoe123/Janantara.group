@@ -1,6 +1,4 @@
 
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import {
   SidebarProvider,
   Sidebar,
@@ -20,7 +18,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/lib/actions";
 import { Separator } from "@/components/ui/separator";
-import { cookies } from "next/headers";
 
 const LogoutButton = () => {
   return (
@@ -38,13 +35,6 @@ export default async function CmsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return redirect("/admin/login");
-  }
 
   return (
     <SidebarProvider>

@@ -1,5 +1,4 @@
 
-import { cookies } from "next/headers";
 import { getClients, getProjects } from "@/lib/actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -17,9 +16,9 @@ type Project = {
 };
 
 export default async function ProjectsPage() {
-  const cookieStore = cookies();
-  const clientsResult = await getClients(cookieStore);
-  const projectsResult = await getProjects(cookieStore);
+  // Supabase is removed, returning empty data
+  const clientsResult = { data: [], error: null };
+  const projectsResult = { data: [], error: null };
 
   const error = clientsResult.error || projectsResult.error;
 
