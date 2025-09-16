@@ -1,60 +1,22 @@
 
--- Hapus tabel lama jika ada untuk memastikan skrip bisa dijalankan ulang
-DROP TABLE IF EXISTS "testimonials" CASCADE;
-DROP TABLE IF EXISTS "team_members" CASCADE;
-DROP TABLE IF EXISTS "projects" CASCADE;
-DROP TABLE IF EXISTS "services" CASCADE;
-DROP TABLE IF EXISTS "clients" CASCADE;
+-- Drop tables in reverse order of creation to handle foreign key constraints
+DROP TABLE IF EXISTS "testimonials";
+DROP TABLE IF EXISTS "projects";
+DROP TABLE IF EXISTS "clients";
+DROP TABLE IF EXISTS "services";
+DROP TABLE IF EXISTS "team_members";
 
--- Hapus storage buckets lama jika ada
--- Perhatikan: Menghapus bucket juga akan menghapus semua file di dalamnya.
-SELECT FROM storage.buckets WHERE id = 'project_images';
-DO $$
-BEGIN
-  IF FOUND THEN
-    PERFORM storage.empty_bucket('project_images');
-    PERFORM storage.delete_bucket('project_images');
-  END IF;
-END $$;
-
-SELECT FROM storage.buckets WHERE id = 'team_images';
-DO $$
-BEGIN
-  IF FOUND THEN
-    PERFORM storage.empty_bucket('team_images');
-    PERFORM storage.delete_bucket('team_images');
-  END IF;
-END $$;
-
-SELECT FROM storage.buckets WHERE id = 'testimonial_images';
-DO $$
-BEGIN
-  IF FOUND THEN
-    PERFORM storage.empty_bucket('testimonial_images');
-    PERFORM storage.delete_bucket('testimonial_images');
-  END IF;
-END $$;
-
--- Buat Tabel Klien (Clients)
+-- Create clients table
 CREATE TABLE clients (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
+    name VARCHAR(255) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Buat Tabel Layanan (Services)
-CREATE TABLE services (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title TEXT NOT NULL,
-    description TEXT NOT NULL,
-    icon TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- Buat Tabel Proyek (Projects)
+-- Create projects table
 CREATE TABLE projects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title TEXT NOT NULL,
+    title VARCHAR(255) NOT NULL,
     description TEXT,
     image_url TEXT,
     link TEXT,
@@ -62,89 +24,128 @@ CREATE TABLE projects (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Buat Tabel Anggota Tim (Team Members)
+-- Create services table
+CREATE TABLE services (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    icon VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Create team_members table
 CREATE TABLE team_members (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
-    role TEXT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    role VARCHAR(255) NOT NULL,
     image_url TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Buat Tabel Testimonial (Testimonials)
+-- Create testimonials table
 CREATE TABLE testimonials (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     quote TEXT NOT NULL,
-    name TEXT NOT NULL,
-    title TEXT NOT NULL,
-    image_url TEXT,
+    name VARCHAR(255) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    avatar_url TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Buat Storage Buckets untuk Gambar
-INSERT INTO storage.buckets (id, name, public) VALUES ('project_images', 'project_images', true);
-INSERT INTO storage.buckets (id, name, public) VALUES ('team_images', 'team_images', true);
-INSERT INTO storage.buckets (id, name, public) VALUES ('testimonial_images', 'testimonial_images', true);
+-- Create storage buckets if they don't exist
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('project_images', 'project_images', true)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('team_images', 'team_images', true)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('testimonial_avatars', 'testimonial_avatars', true)
+ON CONFLICT (id) DO NOTHING;
 
 
--- Konfigurasi Row Level Security (RLS)
-
--- Aktifkan RLS untuk semua tabel
+-- Set up Row Level Security (RLS)
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
-ALTER TABLE services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE testimonials ENABLE ROW LEVEL SECURITY;
 
--- Hapus policy lama jika ada
-DROP POLICY IF EXISTS "Public read access" ON clients;
-DROP POLICY IF EXISTS "Authenticated users can manage" ON clients;
-DROP POLICY IF EXISTS "Public read access" ON services;
-DROP POLICY IF EXISTS "Authenticated users can manage" ON services;
-DROP POLICY IF EXISTS "Public read access" ON projects;
-DROP POLICY IF EXISTS "Authenticated users can manage" ON projects;
-DROP POLICY IF EXISTS "Public read access" ON team_members;
-DROP POLICY IF EXISTS "Authenticated users can manage" ON team_members;
-DROP POLICY IF EXISTS "Public read access" ON testimonials;
-DROP POLICY IF EXISTS "Authenticated users can manage" ON testimonials;
+-- Drop existing policies to ensure a clean slate
+DROP POLICY IF EXISTS "Public can read all" ON clients;
+DROP POLICY IF EXISTS "Authenticated can do all" ON clients;
+DROP POLICY IF EXISTS "Public can read all" ON projects;
+DROP POLICY IF EXISTS "Authenticated can do all" ON projects;
+DROP POLICY IF EXISTS "Public can read all" ON services;
+DROP POLICY IF EXISTS "Authenticated can do all" ON services;
+DROP POLICY IF EXISTS "Public can read all" ON team_members;
+DROP POLICY IF EXISTS "Authenticated can do all" ON team_members;
+DROP POLICY IF EXISTS "Public can read all" ON testimonials;
+DROP POLICY IF EXISTS "Authenticated can do all" ON testimonials;
 
--- Policies untuk tabel `clients`
-CREATE POLICY "Public read access" ON clients FOR SELECT USING (true);
-CREATE POLICY "Authenticated users can manage" ON clients FOR ALL USING (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Authenticated can upload project images" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated can upload team images" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated can upload testimonial avatars" ON storage.objects;
+DROP POLICY IF EXISTS "Public can view public buckets" ON storage.objects;
 
--- Policies untuk tabel `services`
-CREATE POLICY "Public read access" ON services FOR SELECT USING (true);
-CREATE POLICY "Authenticated users can manage" ON services FOR ALL USING (auth.role() = 'authenticated');
 
--- Policies untuk tabel `projects`
-CREATE POLICY "Public read access" ON projects FOR SELECT USING (true);
-CREATE POLICY "Authenticated users can manage" ON projects FOR ALL USING (auth.role() = 'authenticated');
+-- Create policies for public read access
+CREATE POLICY "Public can read all" ON clients FOR SELECT USING (true);
+CREATE POLICY "Public can read all" ON projects FOR SELECT USING (true);
+CREATE POLICY "Public can read all" ON services FOR SELECT USING (true);
+CREATE POLICY "Public can read all" ON team_members FOR SELECT USING (true);
+CREATE POLICY "Public can read all" ON testimonials FOR SELECT USING (true);
 
--- Policies untuk tabel `team_members`
-CREATE POLICY "Public read access" ON team_members FOR SELECT USING (true);
-CREATE POLICY "Authenticated users can manage" ON team_members FOR ALL USING (auth.role() = 'authenticated');
+-- Create policies for authenticated users to manage data
+CREATE POLICY "Authenticated can do all" ON clients FOR ALL
+USING (auth.role() = 'authenticated')
+WITH CHECK (auth.role() = 'authenticated');
 
--- Policies untuk tabel `testimonials`
-CREATE POLICY "Public read access" ON testimonials FOR SELECT USING (true);
-CREATE POLICY "Authenticated users can manage" ON testimonials FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated can do all" ON projects FOR ALL
+USING (auth.role() = 'authenticated')
+WITH CHECK (auth.role() = 'authenticated');
 
--- Policies untuk Storage Buckets
--- Hapus policy lama jika ada
-DROP POLICY IF EXISTS "Public read access for project images" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated users can manage project images" ON storage.objects;
-DROP POLICY IF EXISTS "Public read access for team images" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated users can manage team images" ON storage.objects;
-DROP POLICY IF EXISTS "Public read access for testimonial images" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated users can manage testimonial images" ON storage.objects;
+CREATE POLICY "Authenticated can do all" ON services FOR ALL
+USING (auth.role() = 'authenticated')
+WITH CHECK (auth.role() = 'authenticated');
 
--- Policies untuk `project_images`
-CREATE POLICY "Public read access for project images" ON storage.objects FOR SELECT USING (bucket_id = 'project_images');
-CREATE POLICY "Authenticated users can manage project images" ON storage.objects FOR ALL WITH CHECK (bucket_id = 'project_images' AND auth.role() = 'authenticated');
+CREATE POLICY "Authenticated can do all" ON team_members FOR ALL
+USING (auth.role() = 'authenticated')
+WITH CHECK (auth.role() = 'authenticated');
 
--- Policies untuk `team_images`
-CREATE POLICY "Public read access for team images" ON storage.objects FOR SELECT USING (bucket_id = 'team_images');
-CREATE POLICY "Authenticated users can manage team images" ON storage.objects FOR ALL WITH CHECK (bucket_id = 'team_images' AND auth.role() = 'authenticated');
+CREATE POLICY "Authenticated can do all" ON testimonials FOR ALL
+USING (auth.role() = 'authenticated')
+WITH CHECK (auth.role() = 'authenticated');
 
--- Policies untuk `testimonial_images`
-CREATE POLICY "Public read access for testimonial images" ON storage.objects FOR SELECT USING (bucket_id = 'testimonial_images');
-CREATE POLICY "Authenticated users can manage testimonial images" ON storage.objects FOR ALL WITH CHECK (bucket_id = 'testimonial_images' AND auth.role() = 'authenticated');
+
+-- Create policies for storage
+CREATE POLICY "Public can view public buckets" ON storage.objects
+FOR SELECT USING (
+    bucket_id IN ('project_images', 'team_images', 'testimonial_avatars')
+);
+
+CREATE POLICY "Authenticated can upload project images" ON storage.objects
+FOR INSERT WITH CHECK (
+    bucket_id = 'project_images' AND auth.role() = 'authenticated'
+);
+
+CREATE POLICY "Authenticated can upload team images" ON storage.objects
+FOR INSERT WITH CHECK (
+    bucket_id = 'team_images' AND auth.role() = 'authenticated'
+);
+
+CREATE POLICY "Authenticated can upload testimonial avatars" ON storage.objects
+FOR INSERT WITH CHECK (
+    bucket_id = 'testimonial_avatars' AND auth.role() = 'authenticated'
+);
+
+CREATE POLICY "Authenticated can update their own images" ON storage.objects
+FOR UPDATE
+USING (auth.role() = 'authenticated')
+WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated can delete their own images" ON storage.objects
+FOR DELETE
+USING (auth.role() = 'authenticated');
