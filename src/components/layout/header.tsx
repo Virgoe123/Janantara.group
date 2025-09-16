@@ -10,7 +10,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 const Logo = () => (
   <Link href="/" className="flex items-center gap-2" prefetch={false}>
-    <Image src="https://res.cloudinary.com/dye07cjmn/image/upload/v1757991304/9f0ff1c3-072f-4114-9972-6b714d221d3f.png" alt="Janantara Logo" width={24} height={24} className="h-6 w-6" />
+    <Image src="https://res.cloudinary.com/dye07cjmn/image/upload/v1757991508/675d9b2e-e64c-429b-9aa3-cfaeda887cb8.png" alt="Janantara Logo" width={24} height={24} className="h-6 w-6" />
     <span className="text-xl font-bold tracking-tight text-foreground">
       Janantara
     </span>
