@@ -1,5 +1,7 @@
 "use client";
 
+import { useFormState, useFormStatus } from "react-dom";
+import { authenticate, LoginState } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,34 +14,76 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
+  const initialState: LoginState = { message: null, errors: {} };
+  const [state, dispatch] = useFormState(authenticate, initialState);
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-secondary">
       <Card className="w-full max-w-sm">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
-          <CardDescription>Enter your email below to login to your account</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="m@example.com" required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" required />
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <Button className="w-full">Login</Button>
-          <p className="text-xs text-center text-muted-foreground">
-            <Link href="/" className="underline hover:text-primary">
-              Back to main site
-            </Link>
-          </p>
-        </CardFooter>
+        <form action={dispatch}>
+          <CardHeader className="space-y-1 text-center">
+            <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
+            <CardDescription>Enter your email and password to login</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email" 
+                name="email" 
+                type="email" 
+                placeholder="m@example.com" 
+                required 
+              />
+              {state.errors?.email &&
+                <p className="text-sm font-medium text-destructive">
+                  {state.errors.email[0]}
+                </p>
+              }
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" name="password" type="password" required />
+               {state.errors?.password &&
+                <p className="text-sm font-medium text-destructive">
+                  {state.errors.password[0]}
+                </p>
+              }
+            </div>
+            {state.message && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Login Failed</AlertTitle>
+                <AlertDescription>
+                  {state.message}
+                </Aler tDescription>
+              </Alert>
+            )}
+          </CardContent>
+          <CardFooter className="flex flex-col gap-4">
+            <LoginButton />
+            <p className="text-xs text-center text-muted-foreground">
+              <Link href="/" className="underline hover:text-primary">
+                Back to main site
+              </Link>
+            </p>
+          </CardFooter>
+        </form>
       </Card>
     </div>
+  );
+}
+
+function LoginButton() {
+  const { pending } = useFormStatus();
+ 
+  return (
+    <Button className="w-full" aria-disabled={pending}>
+      {pending ? "Logging in..." : "Login"}
+    </Button>
   );
 }
