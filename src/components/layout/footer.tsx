@@ -15,12 +15,8 @@ export async function Footer() {
         <p className="text-sm text-muted-foreground">
           &copy; {new Date().getFullYear()} Janantara. All rights reserved.
         </p>
-        {session && (
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/cms">Go to CMS</Link>
-          </Button>
-        )}
       </div>
     </footer>
   );
 }
+
