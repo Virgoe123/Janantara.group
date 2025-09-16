@@ -250,3 +250,77 @@ export async function getServices() {
 
   return { data, error };
 }
+
+// Team Member Actions
+const TeamMemberSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters."),
+  role: z.string().min(2, "Role must be at least 2 characters."),
+  image: z.instanceof(File).refine(file => file.size > 0, "Image is required.").refine(file => file.size < 4 * 1024 * 1024, "Image must be less than 4MB."),
+});
+
+export async function addTeamMember(prevState: LoginState, formData: FormData) {
+    const supabase = createClient();
+
+    const validatedFields = TeamMemberSchema.safeParse({
+        name: formData.get('name'),
+        role: formData.get('role'),
+        image: formData.get('image'),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Failed to add team member. Please check the fields.',
+        };
+    }
+
+    const { name, role, image } = validatedFields.data;
+
+    // 1. Upload image to Supabase Storage
+    const imageFileName = `${crypto.randomUUID()}-${image.name}`;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('team_images')
+        .upload(imageFileName, image);
+
+    if (uploadError) {
+        console.error('Storage Error:', uploadError);
+        return { message: 'Database Error: Failed to upload image.' };
+    }
+
+    // 2. Get public URL of the uploaded image
+    const { data: urlData } = supabase.storage
+        .from('team_images')
+        .getPublicUrl(uploadData.path);
+
+    const imageUrl = urlData.publicUrl;
+
+    // 3. Insert team member into the database
+    const { error: insertError } = await supabase.from('team_members').insert({
+        name,
+        role,
+        image_url: imageUrl,
+    });
+
+    if (insertError) {
+        console.error('Insert Error:', insertError);
+        return { message: 'Database Error: Failed to save team member.' };
+    }
+
+    revalidatePath('/cms/team');
+    revalidatePath('/#about');
+    return { message: `Successfully added team member "${name}".` };
+}
+
+export async function getTeamMembers() {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('team_members')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error("Get Team Members Error:", error);
+  }
+
+  return { data, error };
+}
