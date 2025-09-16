@@ -1,45 +1,61 @@
--- Create the clients table
+-- Create clients table
 CREATE TABLE clients (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
--- Enable Row Level Security (RLS) for the clients table
--- This is a security best practice in Supabase.
+-- RLS for clients table
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 
--- POLICIES
--- Create policies to define access rules for the 'clients' table.
-
--- 1. Allow authenticated users to view all clients.
-CREATE POLICY "Allow authenticated users to view clients"
-ON clients
-FOR SELECT
-TO authenticated
+CREATE POLICY "Allow public read-only access" 
+ON clients 
+FOR SELECT 
 USING (true);
 
--- 2. Allow authenticated users to insert new clients.
-CREATE POLICY "Allow authenticated users to insert clients"
+CREATE POLICY "Allow authenticated users to insert"
 ON clients
 FOR INSERT
 TO authenticated
 WITH CHECK (true);
 
--- 3. Allow authenticated users to update their own clients (optional, if needed).
---    This example assumes you might add a user_id column to track who created the client.
---    If you add a user_id column: ALTER TABLE clients ADD COLUMN user_id UUID REFERENCES auth.users(id);
---
--- CREATE POLICY "Allow users to update their own clients"
--- ON clients
--- FOR UPDATE
--- TO authenticated
--- USING (auth.uid() = user_id)
--- WITH CHECK (auth.uid() = user_id);
+-- Create projects table
+CREATE TABLE projects (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT,
+  image_url TEXT,
+  client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL
+);
 
--- 4. Allow authenticated users to delete their own clients (optional, if needed).
--- CREATE POLICY "Allow users to delete their own clients"
--- ON clients
--- FOR DELETE
--- TO authenticated
--- USING (auth.uid() = user_id);
+-- RLS for projects table
+ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read-only access on projects"
+ON projects
+FOR SELECT
+USING (true);
+
+CREATE POLICY "Allow authenticated users to insert projects"
+ON projects
+FOR INSERT
+TO authenticated
+WITH CHECK (true);
+
+-- Create a storage bucket for project images with public access
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('project_images', 'project_images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- RLS for project_images bucket
+CREATE POLICY "Allow public read access on project images"
+ON storage.objects
+FOR SELECT
+USING (bucket_id = 'project_images');
+
+CREATE POLICY "Allow authenticated users to upload project images"
+ON storage.objects
+FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'project_images');

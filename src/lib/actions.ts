@@ -28,6 +28,9 @@ const LoginSchema = z.object({
 
 export type LoginState = {
   message?: string | null;
+  errors?: {
+    [key: string]: string[] | undefined;
+  }
 };
 
 export async function authenticate(
@@ -61,6 +64,7 @@ export async function authenticate(
     return { message: 'Invalid credentials. Please try again.' };
   }
 
+  revalidatePath(redirectTo);
   return redirect(redirectTo);
 }
 
@@ -75,7 +79,7 @@ const ClientSchema = z.object({
   name: z.string().min(2, "Client name must be at least 2 characters."),
 });
 
-export async function addClient(formData: FormData) {
+export async function addClient(prevState: LoginState, formData: FormData) {
   const supabase = createClient();
   const validatedFields = ClientSchema.safeParse({
     name: formData.get('name'),
@@ -83,7 +87,8 @@ export async function addClient(formData: FormData) {
 
   if (!validatedFields.success) {
     return {
-      error: validatedFields.error.flatten().fieldErrors,
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Failed to add client.',
     };
   }
   
@@ -93,12 +98,14 @@ export async function addClient(formData: FormData) {
 
   if (error) {
     console.error('Supabase error:', error);
-    return { error: 'Failed to add client.' };
+    return { message: 'Database Error: Failed to add client.' };
   }
 
   revalidatePath('/cms/clients');
-  redirect('/cms/clients');
+  // Return a success state or redirect if you prefer form.reset() on client
+  return { message: `Added client ${validatedFields.data.name}.` };
 }
+
 
 export async function getClients() {
   const supabase = createClient();
@@ -106,6 +113,85 @@ export async function getClients() {
     .from('clients')
     .select('*')
     .order('created_at', { ascending: false });
+
+  return { data, error };
+}
+
+
+// Project Actions
+const ProjectSchema = z.object({
+  title: z.string().min(2, "Title must be at least 2 characters."),
+  description: z.string().optional(),
+  clientId: z.string().uuid("Invalid client ID.").optional().or(z.literal('')),
+  image: z.instanceof(File).refine(file => file.size > 0, "Project image is required.").refine(file => file.size < 4 * 1024 * 1024, "Image must be less than 4MB."),
+});
+
+
+export async function addProject(prevState: LoginState, formData: FormData) {
+    const supabase = createClient();
+
+    const validatedFields = ProjectSchema.safeParse({
+        title: formData.get('title'),
+        description: formData.get('description'),
+        clientId: formData.get('clientId'),
+        image: formData.get('image'),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Failed to create project. Please check the fields.',
+        };
+    }
+
+    const { title, description, clientId, image } = validatedFields.data;
+
+    // 1. Upload image to Supabase Storage
+    const imageFileName = `${crypto.randomUUID()}-${image.name}`;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('project_images')
+        .upload(imageFileName, image);
+
+    if (uploadError) {
+        console.error('Storage Error:', uploadError);
+        return { message: 'Database Error: Failed to upload image.' };
+    }
+
+    // 2. Get public URL of the uploaded image
+    const { data: urlData } = supabase.storage
+        .from('project_images')
+        .getPublicUrl(uploadData.path);
+
+    const imageUrl = urlData.publicUrl;
+
+    // 3. Insert project into the database
+    const { error: insertError } = await supabase.from('projects').insert({
+        title,
+        description,
+        client_id: clientId || null,
+        image_url: imageUrl,
+    });
+
+    if (insertError) {
+        console.error('Insert Error:', insertError);
+        // If insert fails, maybe delete the uploaded image? (optional)
+        return { message: 'Database Error: Failed to save project.' };
+    }
+
+    revalidatePath('/cms/projects');
+    return { message: `Successfully added project "${title}".` };
+}
+
+export async function getProjects() {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*, clients(name)')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error("Get Projects Error:", error);
+  }
 
   return { data, error };
 }
