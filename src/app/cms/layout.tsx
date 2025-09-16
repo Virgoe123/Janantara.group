@@ -12,7 +12,7 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-import { LayoutDashboard, LogOut, Settings, Home, Users, Briefcase, Wrench, Smile } from "lucide-react";
+import { LayoutDashboard, LogOut, Settings, Home, Users, Briefcase, Wrench } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/lib/actions";
@@ -85,14 +85,6 @@ export default async function CmsLayout({
                 <Link href="/cms/services">
                   <Wrench />
                   Services
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/cms/team">
-                  <Smile />
-                  Team
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

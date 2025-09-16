@@ -1,3 +1,4 @@
+
 {
   "placeholderImages": [
     {
@@ -23,30 +24,6 @@
       "description": "Fourth project image",
       "imageUrl": "https://picsum.photos/seed/p4/600/400",
       "imageHint": "abstract code"
-    },
-    {
-      "id": "team-1",
-      "description": "First team member",
-      "imageUrl": "https://picsum.photos/seed/t1/100/100",
-      "imageHint": "professional portrait"
-    },
-    {
-      "id": "team-2",
-      "description": "Second team member",
-      "imageUrl": "https://picsum.photos/seed/t2/100/100",
-      "imageHint": "person smiling"
-    },
-    {
-      "id": "team-3",
-      "description": "Third team member",
-      "imageUrl": "https://picsum.photos/seed/t3/100/100",
-      "imageHint": "woman developer"
-    },
-    {
-      "id": "team-4",
-      "description": "Fourth team member",
-      "imageUrl": "https://picsum.photos/seed/t4/100/100",
-      "imageHint": "man office"
     }
   ]
 }
