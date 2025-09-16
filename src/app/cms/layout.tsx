@@ -18,6 +18,9 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/lib/actions";
 import { Separator } from "@/components/ui/separator";
+import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 const LogoutButton = () => {
   return (
@@ -35,6 +38,13 @@ export default async function CmsLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+  const { data: { session }} = await supabase.auth.getSession();
+
+  if (!session) {
+    redirect('/admin/login');
+  }
 
   return (
     <SidebarProvider>

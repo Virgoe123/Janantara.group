@@ -1,8 +1,13 @@
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 
 export async function Footer() {
-  const user = null; // Supabase is removed
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+  const { data: { session }} = await supabase.auth.getSession();
 
   return (
     <footer className="border-t">
@@ -10,7 +15,7 @@ export async function Footer() {
         <p className="text-sm text-muted-foreground">
           &copy; {new Date().getFullYear()} Janantara. All rights reserved.
         </p>
-        {user && (
+        {session && (
           <Button asChild variant="ghost" size="sm">
             <Link href="/cms">Go to CMS</Link>
           </Button>
