@@ -40,6 +40,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Trash2 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Combobox } from "@/components/ui/combobox";
 
 
 type IconName = keyof typeof LucideIcons;
@@ -69,6 +70,10 @@ function SubmitButton() {
     )
 }
 
+const iconNames = Object.keys(LucideIcons).filter(
+  (key) => typeof LucideIcons[key as keyof typeof LucideIcons] !== "function"
+);
+
 function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
     const { toast } = useToast();
     const initialState: LoginState = { message: null, errors: {}, success: false };
@@ -87,13 +92,17 @@ function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
         onServiceAdded();
       }
     }, [state, onServiceAdded, toast]);
+    
+    const iconOptions = Object.keys(LucideIcons)
+        .filter(key => key !== 'createLucideIcon' && key !== 'LucideProvider')
+        .map(key => ({ value: key, label: key }));
 
     return (
          <Card>
             <CardHeader>
             <CardTitle>Add New Service</CardTitle>
             <CardDescription>
-                Fill out the details for the new service. The icon name must match a name from 'lucide-react'.
+                Fill out the details for the new service.
             </CardDescription>
             </CardHeader>
             <form action={formAction} key={formKey}>
@@ -109,8 +118,14 @@ function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
                     {state?.errors?.description && <p className="text-sm text-destructive">{state.errors.description[0]}</p>}
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="icon">Icon Name</Label>
-                    <Input id="icon" name="icon" placeholder="e.g., Codepen, Smartphone, PenTool" required />
+                    <Label>Icon</Label>
+                    <Combobox
+                        name="icon"
+                        options={iconOptions}
+                        placeholder="Select an icon..."
+                        searchPlaceholder="Search icons..."
+                        notFoundText="No icons found."
+                     />
                      {state?.errors?.icon && <p className="text-sm text-destructive">{state.errors.icon[0]}</p>}
                 </div>
                  {state?.message && !state.success && (
@@ -275,5 +290,3 @@ export default function ServicesPage() {
     </div>
   );
 }
-
-    
