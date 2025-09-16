@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import React from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -94,6 +94,9 @@ const MobileHeader = () => {
             </Button>
           </SheetTrigger>
           <SheetContent side="right">
+            <SheetHeader>
+              <SheetTitle className="sr-only">Mobile Navigation</SheetTitle>
+            </SheetHeader>
             <div className="flex flex-col gap-6 p-6">
               <Logo />
               <NavLinks
