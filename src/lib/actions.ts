@@ -126,9 +126,8 @@ export async function deleteClient(id: string) {
 }
 
 
-export async function getClients() {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+export async function getClients(cookieStore?: ReturnType<typeof cookies>) {
+  const supabase = createClient(cookieStore ?? cookies());
   const { data, error } = await supabase
     .from('clients')
     .select('*')
