@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useTransition, useCallback, useEffect } from "react";
-import { useFormStatus, useActionState } from "react-dom";
+import { useFormStatus, useFormState } from "react-dom";
 import Image from "next/image";
 import { addProject, getClients, getProjects, deleteProject, LoginState } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
@@ -72,7 +72,7 @@ function SubmitButton() {
 function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProjectAdded: () => void }) {
   const { toast } = useToast();
   const initialState: LoginState = { message: null, errors: {}, success: false };
-  const [state, formAction] = useActionState(addProject, initialState);
+  const [state, formAction] = useFormState(addProject, initialState);
   const [formKey, setFormKey] = useState(Date.now().toString());
 
   useEffect(() => {

@@ -1,8 +1,8 @@
 
 'use client'
 
-import { useActionState, useEffect, useState, useTransition, useCallback } from "react";
-import { useFormStatus } from "react-dom";
+import { useEffect, useState, useTransition, useCallback } from "react";
+import { useFormStatus, useFormState } from "react-dom";
 import { addTeamMember, getTeamMembers, deleteTeamMember, LoginState } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,17 +58,19 @@ function SubmitButton() {
 function AddTeamMemberForm({ onMemberAdded }: { onMemberAdded: () => void }) {
   const { toast } = useToast();
   const initialState: LoginState = { message: null, errors: {}, success: false };
-  const [state, formAction] = useActionState(addTeamMember, initialState);
+  const [state, formAction] = useFormState(addTeamMember, initialState);
   const [formKey, setFormKey] = useState(Date.now().toString());
 
   useEffect(() => {
-    if (state.success && state.message) {
-      toast({
-        title: "Success!",
-        description: state.message,
-      });
-      setFormKey(Date.now().toString());
-      onMemberAdded();
+    if (state.success) {
+        if(state.message) {
+            toast({
+                title: "Success!",
+                description: state.message,
+            });
+        }
+        setFormKey(Date.now().toString());
+        onMemberAdded();
     }
   }, [state, onMemberAdded, toast]);
 

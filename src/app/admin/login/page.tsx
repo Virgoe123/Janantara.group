@@ -1,8 +1,7 @@
 
 "use client";
 
-import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
+import { useFormState, useFormStatus } from "react-dom";
 import { authenticate, LoginState } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +21,7 @@ import { AlertCircle } from "lucide-react";
 export default function LoginPage() {
   const initialState: LoginState = { message: null };
   const authenticateAdmin = authenticate.bind(null, "/cms");
-  const [state, dispatch] = useActionState(authenticateAdmin, initialState);
+  const [state, dispatch] = useFormState(authenticateAdmin, initialState);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-secondary">

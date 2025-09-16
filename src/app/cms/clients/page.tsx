@@ -1,8 +1,8 @@
 
 'use client'
 
-import { useActionState, useEffect, useState, useTransition, useCallback } from "react";
-import { useFormStatus } from "react-dom";
+import { useEffect, useState, useTransition, useCallback } from "react";
+import { useFormStatus, useFormState } from "react-dom";
 import { addClient, getClients, deleteClient, LoginState } from "@/lib/actions";
 import {
   Card,
@@ -51,15 +51,17 @@ function SubmitButton() {
 function AddClientForm({ onClientAdded }: { onClientAdded: () => void }) {
     const { toast } = useToast();
     const initialState: LoginState = { message: null, errors: {}, success: false };
-    const [state, formAction] = useActionState(addClient, initialState);
+    const [state, formAction] = useFormState(addClient, initialState);
     const [formKey, setFormKey] = useState(Date.now().toString());
 
     useEffect(() => {
-      if (state.success && state.message) {
-        toast({
-          title: "Success!",
-          description: state.message,
-        });
+      if (state.success) {
+        if(state.message) {
+            toast({
+              title: "Success!",
+              description: state.message,
+            });
+        }
         setFormKey(Date.now().toString());
         onClientAdded();
       }
