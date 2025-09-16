@@ -8,7 +8,7 @@ export function Hero() {
         <div className="flex flex-col items-center space-y-4 text-center">
           <div className="space-y-2">
             <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none font-headline">
-              Verdant Vista
+              Janantara
             </h1>
             <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
               Crafting Digital Excellence with Purpose and Precision.

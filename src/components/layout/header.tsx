@@ -5,12 +5,13 @@ import { Mountain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import React from "react";
 
 const Logo = () => (
   <Link href="/" className="flex items-center gap-2" prefetch={false}>
     <Mountain className="h-6 w-6 text-primary" />
     <span className="text-xl font-bold tracking-tight text-foreground">
-      Verdant Vista
+      Janantara
     </span>
   </Link>
 );

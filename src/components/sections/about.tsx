@@ -16,7 +16,7 @@ export function About() {
     <section id="about" className="w-full py-12 md:py-24 lg:py-32 bg-secondary">
       <div className="container mx-auto grid items-center gap-6 px-4 md:px-6 lg:grid-cols-2 lg:gap-10">
         <div className="space-y-4">
-          <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight font-headline">About Verdant Vista</h2>
+          <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight font-headline">About Janantara</h2>
           <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
             We are a passionate team of developers and designers dedicated to building exceptional digital products. Our mission is to combine innovative technology with creative design to solve complex problems and deliver outstanding results for our clients.
           </p>
