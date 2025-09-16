@@ -101,7 +101,7 @@ const HeaderContent = () => {
     const isMobile = useIsMobile();
     const [isOpen, setIsOpen] = React.useState(false);
 
-    if (isMobile === undefined) return <div className="h-16 md:h-20" />;
+    if (isMobile === undefined) return <div className="h-16" />;
 
     if (isMobile) {
         return (
@@ -139,7 +139,7 @@ const HeaderContent = () => {
 
     return (
         <header className={cn(
-            "hidden h-20 items-center justify-between px-4 md:flex md:px-8 fixed top-0 z-50 w-full transition-all duration-300",
+            "hidden h-16 items-center justify-between px-4 md:flex md:px-8 fixed top-0 z-50 w-full transition-all duration-300",
             scrolled ? "bg-background/80 backdrop-blur-sm shadow-md" : "bg-transparent"
         )}>
             <Logo scrolled={scrolled} />
