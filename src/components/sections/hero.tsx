@@ -27,7 +27,7 @@ export async function Hero() {
     <section id="home" className="relative w-full h-screen min-h-[700px] flex flex-col items-center overflow-hidden bg-[#11793A]">
       <div className="absolute inset-0 subtle-grid-pattern opacity-20" />
       
-      <div className="relative container mx-auto px-4 md:px-6 z-10 flex-1 flex flex-col items-center justify-center pb-32">
+      <div className="relative container mx-auto px-4 md:px-6 z-30 flex-1 flex flex-col items-center justify-center pb-32">
           <div className="flex flex-col items-center space-y-6 text-center">
             <Badge variant="outline" className="bg-white/10 border-white/30 text-white py-1 px-3">
                <span className="relative flex h-2 w-2 mr-2">
@@ -55,7 +55,7 @@ export async function Hero() {
       </div>
       
       <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-background to-transparent z-20" />
-      <div className="absolute bottom-0 w-full p-8 z-30">
+      <div className="absolute bottom-0 w-full p-8 z-40">
         <div className="container mx-auto px-4 md:px-6 flex items-center justify-between text-sm font-medium">
           <Link href="/#projects" className="flex items-center gap-2 hover:text-primary text-foreground">
             SCROLL DOWN
@@ -73,3 +73,4 @@ export async function Hero() {
     </section>
   );
 }
+
