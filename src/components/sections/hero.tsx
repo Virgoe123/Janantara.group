@@ -14,7 +14,7 @@ export function Hero() {
 
       {/* Floating Shapes */}
       <Shape as="div" className="h-32 w-32 rounded-full bg-primary/10 top-1/4 left-1/4 animate-float" style={{ animationDelay: '0s' }}/>
-      <Shape as="div" className="h-48 w-48 rounded-lg bg-primary/5 top-1/2 right-1/4 animate-float" style={{ transform: 'rotate(45deg)', animationDelay: '2s' }} />
+      <Shape as="div" className="h-48 w-48 rounded-lg bg-primary/5 top-1/2 right-1/2 animate-float" style={{ transform: 'rotate(45deg)', animationDelay: '2s' }} />
       <Shape as="div" className="h-20 w-20 border-2 border-primary/20 bottom-1/4 left-1/3 animate-float" style={{ animationDelay: '4s' }} />
        <Shape as="div" className="hidden md:block h-64 w-64 border-4 border-primary/10 rounded-full top-0 -right-20 animate-float" style={{ animationDelay: '1s' }} />
       <Shape as="div" className="hidden md:block h-40 w-40 bg-primary/5 bottom-10 left-20 animate-float" style={{ animationDelay: '3s' }} />
@@ -33,6 +33,8 @@ export function Hero() {
             <Button size="lg" asChild className="wave-button">
               <Link href="/#projects" prefetch={false}>
                 View Our Work
+                <span className="wave-top"></span>
+                <span className="wave-bottom"></span>
               </Link>
             </Button>
             <Button size="lg" variant="secondary" asChild>
