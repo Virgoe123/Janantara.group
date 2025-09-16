@@ -8,15 +8,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import React, { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
-const Logo = ({ scrolled }: { scrolled: boolean }) => (
-  <Link href="/" className="flex items-center gap-2" prefetch={false}>
+const Logo = () => (
+  <Link href="/" className="flex items-center" prefetch={false}>
     <Image src="https://res.cloudinary.com/dye07cjmn/image/upload/v1757992101/96b46217-0642-41b8-b06a-0ba5cb0d6572.png" alt="Janantara Logo" width={32} height={32} />
-    <span className={cn(
-      "text-xl font-bold tracking-tight",
-      scrolled ? "text-foreground" : "text-[#F9F4F0]"
-    )}>
-      Janantara
-    </span>
   </Link>
 );
 
@@ -32,7 +26,7 @@ const NavLinks = ({
   <nav className={className}>
     <Link
       href="/#home"
-      className={cn("text-sm font-medium transition-colors", scrolled ? "text-muted-foreground hover:text-foreground" : "text-[#F9F4F0]/80 hover:text-[#F9F4F0]")}
+      className={cn("text-xs font-medium transition-colors", scrolled ? "text-muted-foreground hover:text-foreground" : "text-[#F9F4F0]/80 hover:text-[#F9F4F0]")}
       onClick={onLinkClick}
       prefetch={false}
     >
@@ -40,7 +34,7 @@ const NavLinks = ({
     </Link>
     <Link
       href="/#about"
-      className={cn("text-sm font-medium transition-colors", scrolled ? "text-muted-foreground hover:text-foreground" : "text-[#F9F4F0]/80 hover:text-[#F9F4F0]")}
+      className={cn("text-xs font-medium transition-colors", scrolled ? "text-muted-foreground hover:text-foreground" : "text-[#F9F4F0]/80 hover:text-[#F9F4F0]")}
       onClick={onLinkClick}
       prefetch={false}
     >
@@ -48,7 +42,7 @@ const NavLinks = ({
     </Link>
     <Link
       href="/#services"
-      className={cn("text-sm font-medium transition-colors", scrolled ? "text-muted-foreground hover:text-foreground" : "text-[#F9F4F0]/80 hover:text-[#F9F4F0]")}
+      className={cn("text-xs font-medium transition-colors", scrolled ? "text-muted-foreground hover:text-foreground" : "text-[#F9F4F0]/80 hover:text-[#F9F4F0]")}
       onClick={onLinkClick}
       prefetch={false}
     >
@@ -56,7 +50,7 @@ const NavLinks = ({
     </Link>
     <Link
       href="/#projects"
-      className={cn("text-sm font-medium transition-colors", scrolled ? "text-muted-foreground hover:text-foreground" : "text-[#F9F4F0]/80 hover:text-[#F9F4F0]")}
+      className={cn("text-xs font-medium transition-colors", scrolled ? "text-muted-foreground hover:text-foreground" : "text-[#F9F4F0]/80 hover:text-[#F9F4F0]")}
       onClick={onLinkClick}
       prefetch={false}
     >
@@ -64,7 +58,7 @@ const NavLinks = ({
     </Link>
     <Link
       href="/#testimonials"
-      className={cn("text-sm font-medium transition-colors", scrolled ? "text-muted-foreground hover:text-foreground" : "text-[#F9F4F0]/80 hover:text-[#F9F4F0]")}
+      className={cn("text-xs font-medium transition-colors", scrolled ? "text-muted-foreground hover:text-foreground" : "text-[#F9F4F0]/80 hovertext-[#F9F4F0]")}
       onClick={onLinkClick}
       prefetch={false}
     >
@@ -72,7 +66,7 @@ const NavLinks = ({
     </Link>
     <Link
       href="/#contact"
-      className={cn("text-sm font-medium transition-colors", scrolled ? "text-muted-foreground hover:text-foreground" : "text-[#F9F4F0]/80 hover:text-[#F9F4F0]")}
+      className={cn("text-xs font-medium transition-colors", scrolled ? "text-muted-foreground hover:text-foreground" : "text-[#F9F4F0]/80 hover:text-[#F9F4F0]")}
       onClick={onLinkClick}
       prefetch={false}
     >
@@ -109,7 +103,7 @@ const HeaderContent = () => {
                 "flex h-16 items-center justify-between px-4 md:hidden fixed top-0 z-50 w-full transition-all duration-300",
                 scrolled ? "bg-background/80 backdrop-blur-sm shadow-md" : "bg-transparent"
             )}>
-              <Logo scrolled={scrolled} />
+              <Logo />
               <div className="flex items-center gap-2">
                 <Sheet open={isOpen} onOpenChange={setIsOpen}>
                   <SheetTrigger asChild>
@@ -123,7 +117,7 @@ const HeaderContent = () => {
                       <SheetTitle className="sr-only">Mobile Navigation</SheetTitle>
                     </SheetHeader>
                     <div className="flex flex-col gap-6 p-6">
-                       <Logo scrolled={true} />
+                       <Logo />
                        <NavLinks
                         className="flex flex-col gap-4"
                         onLinkClick={() => setIsOpen(false)}
@@ -139,13 +133,14 @@ const HeaderContent = () => {
 
     return (
         <header className={cn(
-            "hidden h-16 items-center justify-between px-4 md:flex md:px-8 fixed top-0 z-50 w-full transition-all duration-300",
+            "hidden h-16 items-center justify-between px-8 md:flex fixed top-0 z-50 w-full transition-all duration-300",
             scrolled ? "bg-background/80 backdrop-blur-sm shadow-md" : "bg-transparent"
         )}>
-            <Logo scrolled={scrolled} />
-            <div className="flex items-center gap-6">
-                <NavLinks className="flex items-center gap-x-6 text-sm" scrolled={scrolled}/>
+            <div className="absolute left-1/2 -translate-x-1/2">
+                <NavLinks className="flex items-center gap-x-6" scrolled={scrolled}/>
             </div>
+            <Logo />
+            <div />
         </header>
     );
 };
