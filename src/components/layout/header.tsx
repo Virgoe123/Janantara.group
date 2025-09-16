@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import React from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const Logo = () => (
   <Link href="/" className="flex items-center gap-2" prefetch={false}>
@@ -72,6 +73,7 @@ const DesktopHeader = () => (
     <Logo />
     <div className="flex items-center gap-6">
       <NavLinks className="flex items-center gap-6 text-sm" />
+      <ThemeToggle />
     </div>
   </header>
 );
@@ -82,23 +84,26 @@ const MobileHeader = () => {
   return (
     <header className="flex h-16 items-center justify-between px-4 md:hidden sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <Logo />
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetTrigger asChild>
-          <Button variant="outline" size="icon">
-            <MenuIcon className="h-6 w-6" />
-            <span className="sr-only">Toggle navigation menu</span>
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="right">
-          <div className="flex flex-col gap-6 p-6">
-            <Logo />
-            <NavLinks
-              className="flex flex-col gap-4"
-              onLinkClick={() => setIsOpen(false)}
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon">
+              <MenuIcon className="h-6 w-6" />
+              <span className="sr-only">Toggle navigation menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right">
+            <div className="flex flex-col gap-6 p-6">
+              <Logo />
+              <NavLinks
+                className="flex flex-col gap-4"
+                onLinkClick={() => setIsOpen(false)}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
     </header>
   );
 };
