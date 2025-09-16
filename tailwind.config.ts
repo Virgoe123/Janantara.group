@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 const plugin = require('tailwindcss/plugin')
 
@@ -12,7 +13,6 @@ export default {
     extend: {
       fontFamily: {
         body: ['var(--font-inter)'],
-        headline: ['var(--font-playfair)'],
         code: ['monospace'],
       },
       colors: {
