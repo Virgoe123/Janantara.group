@@ -1,116 +1,102 @@
--- 1. HAPUS STRUKTUR LAMA (JIKA ADA) UNTUK EKSEKUSI BERULANG
-drop policy if exists "Allow public read access to clients" on public.clients;
-drop policy if exists "Allow authenticated users to manage clients" on public.clients;
+-- Drop tables and policies if they exist to ensure a clean slate
+DROP POLICY IF EXISTS "Allow public read access to clients" ON public.clients;
+DROP POLICY IF EXISTS "Allow authenticated users to manage clients" ON public.clients;
+DROP TABLE IF EXISTS public.clients;
 
-drop policy if exists "Allow public read access to projects" on public.projects;
-drop policy if exists "Allow authenticated users to manage projects" on public.projects;
+DROP POLICY IF EXISTS "Allow public read access to projects" ON public.projects;
+DROP POLICY IF EXISTS "Allow authenticated users to manage projects" ON public.projects;
+DROP TABLE IF EXISTS public.projects;
 
-drop policy if exists "Allow public read access to services" on public.services;
-drop policy if exists "Allow authenticated users to manage services" on public.services;
+DROP POLICY IF EXISTS "Allow public read access to services" ON public.services;
+DROP POLICY IF EXISTS "Allow authenticated users to manage services" ON public.services;
+DROP TABLE IF EXISTS public.services;
 
-drop policy if exists "Allow public read access to team members" on public.team_members;
-drop policy if exists "Allow authenticated users to manage team members" on public.team_members;
+DROP POLICY IF EXISTS "Allow public read access to team members" ON public.team_members;
+DROP POLICY IF EXISTS "Allow authenticated users to manage team members" ON public.team_members;
+DROP TABLE IF EXISTS public.team_members;
 
-drop policy if exists "Allow public read access to testimonials" on public.testimonials;
-drop policy if exists "Allow authenticated users to manage testimonials" on public.testimonials;
+DROP POLICY IF EXISTS "Allow public read access to testimonials" ON public.testimonials;
+DROP POLICY IF EXISTS "Allow authenticated users to manage testimonials" ON public.testimonials;
+DROP TABLE IF EXISTS public.testimonials;
 
-drop table if exists public.testimonials;
-drop table if exists public.team_members;
-drop table if exists public.services;
-drop table if exists public.projects;
-drop table if exists public.clients;
+-- Manage Storage Buckets
+-- Ensure buckets exist and set public access if needed.
+-- We use separate buckets for different image types.
 
--- 2. BUAT TABEL
--- Tabel Clients
-create table public.clients (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  created_at timestamptz not null default now()
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('project_images', 'project_images', TRUE)
+ON CONFLICT (id) DO UPDATE SET public = TRUE;
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('team_images', 'team_images', TRUE)
+ON CONFLICT (id) DO UPDATE SET public = TRUE;
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('testimonial_avatars', 'testimonial_avatars', TRUE)
+ON CONFLICT (id) DO UPDATE SET public = TRUE;
+
+-- Create clients Table
+CREATE TABLE public.clients (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
 
--- Tabel Projects
-create table public.projects (
-  id uuid primary key default gen_random_uuid(),
-  title text not null,
-  description text,
-  image_url text,
-  link text,
-  client_id uuid references public.clients(id) on delete set null,
-  created_at timestamptz not null default now()
+-- Create projects Table
+CREATE TABLE public.projects (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    description TEXT,
+    image_url TEXT,
+    link TEXT,
+    client_id UUID REFERENCES public.clients(id) ON DELETE SET NULL,
+    created_at TIMEST-AMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 
--- Tabel Services
-create table public.services (
-  id uuid primary key default gen_random_uuid(),
-  title text not null,
-  description text not null,
-  icon text not null,
-  created_at timestamptz not null default now()
+-- Create services Table
+CREATE TABLE public.services (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;
 
--- Tabel Team Members
-create table public.team_members (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  role text not null,
-  image_url text,
-  created_at timestamptz not null default now()
+-- Create team_members Table
+CREATE TABLE public.team_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    role TEXT NOT NULL,
+    image_url TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
 
--- Tabel Testimonials
-create table public.testimonials (
-  id uuid primary key default gen_random_uuid(),
-  quote text not null,
-  name text not null,
-  role text not null,
-  avatar_url text,
-  created_at timestamptz not null default now()
+-- Create testimonials Table
+CREATE TABLE public.testimonials (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    quote TEXT NOT NULL,
+    name TEXT NOT NULL,
+    "role" TEXT NOT NULL,
+    avatar_url TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE public.testimonials ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for public read access (for website visitors)
+CREATE POLICY "Allow public read access to clients" ON public.clients FOR SELECT USING (true);
+CREATE POLICY "Allow public read access to projects" ON public.projects FOR SELECT USING (true);
+CREATE POLICY "Allow public read access to services" ON public.services FOR SELECT USING (true);
+CREATE POLICY "Allow public read access to team members" ON public.team_members FOR SELECT USING (true);
+CREATE POLICY "Allow public read access to testimonials" ON public.testimonials FOR SELECT USING (true);
 
 
--- 3. BUAT STORAGE BUCKETS
-insert into storage.buckets (id, name, public)
-values 
-  ('project_images', 'project_images', true),
-  ('team_images', 'team_images', true),
-  ('testimonial_avatars', 'testimonial_avatars', true)
-on conflict (id) do nothing;
-
-
--- 4. AKTIFKAN ROW LEVEL SECURITY (RLS)
-alter table public.clients enable row level security;
-alter table public.projects enable row level security;
-alter table public.services enable row level security;
-alter table public.team_members enable row level security;
-alter table public.testimonials enable row level security;
-
--- 5. BUAT KEBIJAKAN (POLICIES)
--- Policies untuk Clients
-create policy "Allow public read access to clients" on public.clients for select using (true);
-create policy "Allow authenticated users to manage clients" on public.clients for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
-
--- Policies untuk Projects
-create policy "Allow public read access to projects" on public.projects for select using (true);
-create policy "Allow authenticated users to manage projects" on public.projects for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
-
--- Policies untuk Services
-create policy "Allow public read access to services" on public.services for select using (true);
-create policy "Allow authenticated users to manage services" on public.services for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
-
--- Policies untuk Team Members
-create policy "Allow public read access to team members" on public.team_members for select using (true);
-create policy "Allow authenticated users to manage team members" on public.team_members for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
-
--- Policies untuk Testimonials
-create policy "Allow public read access to testimonials" on public.testimonials for select using (true);
-create policy "Allow authenticated users to manage testimonials" on public.testimonials for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
-
--- Policies untuk Storage
-create policy "Allow public access to project_images" on storage.objects for select using ( bucket_id = 'project_images' );
-create policy "Allow authenticated users to manage project_images" on storage.objects for all using ( bucket_id = 'project_images' and auth.role() = 'authenticated' );
-
-create policy "Allow public access to team_images" on storage.objects for select using ( bucket_id = 'team_images' );
-create policy "Allow authenticated users to manage team_images" on storage.objects for all using ( bucket_id = 'team_images' and auth.role() = 'authenticated' );
-
-create policy "Allow public access to testimonial_avatars" on storage.objects for select using ( bucket_id = 'testimonial_avatars' );
-create policy "Allow authenticated users to manage testimonial_avatars" on storage.objects for all using ( bucket_id = 'testimonial_avatars' and auth.role() = 'authenticated' );
+-- RLS Policies for authenticated users (for CMS management)
+CREATE POLICY "Allow authenticated users to manage clients" ON public.clients FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users to manage projects" ON public.projects FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users to manage services" ON public.services FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users to manage team members" ON public.team_members FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users to manage testimonials" ON public.testimonials FOR ALL USING (auth.role() = 'authenticated');
