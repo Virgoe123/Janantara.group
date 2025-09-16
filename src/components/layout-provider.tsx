@@ -13,13 +13,14 @@ export function LayoutProvider({
   children: ReactNode;
 }) {
   const pathname = usePathname();
-  const isLoginPage = pathname === '/login' || pathname === '/admin/login';
+  const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/admin/login');
+  const isCmsPage = pathname.startsWith('/cms');
 
   return (
     <div className="flex min-h-screen flex-col">
-      {!isLoginPage && header}
+      {!isAuthPage && !isCmsPage && header}
       <main className="flex-1">{children}</main>
-      {!isLoginPage && footer}
+      {!isAuthPage && !isCmsPage && footer}
     </div>
   );
 }
