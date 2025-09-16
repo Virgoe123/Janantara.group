@@ -11,7 +11,7 @@ import { Wind } from "lucide-react";
 
 const Logo = () => (
   <Link href="/" className="flex items-center gap-2" prefetch={false}>
-    <Image src="https://res.cloudinary.com/dye07cjmn/image/upload/v1757992101/96b46217-0642-41b8-b06a-0ba5cb0d6572.png" alt="Janantara Logo" width={32} height={32} />
+    <Wind className="h-6 w-6 text-primary" />
     <span className="text-xl font-bold tracking-tight text-foreground">
       Janantara
     </span>
@@ -50,13 +50,13 @@ const NavLinks = ({
     >
       PROJECTS
     </Link>
-     <Link
-      href="/#pricing"
+    <Link
+      href="/#about"
       className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       onClick={onLinkClick}
       prefetch={false}
     >
-      PRICING
+      ABOUT
     </Link>
     <Link
       href="/#testimonials"
@@ -64,15 +64,15 @@ const NavLinks = ({
       onClick={onLinkClick}
       prefetch={false}
     >
-      REVIEW
+      TESTIMONIALS
     </Link>
     <Link
-      href="/#faq"
+      href="/#contact"
       className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       onClick={onLinkClick}
       prefetch={false}
     >
-      FAQ
+      CONTACT
     </Link>
   </nav>
 );
@@ -123,7 +123,6 @@ const MobileHeader = () => {
 export function Header() {
   const isMobile = useIsMobile();
   
-  // Return a placeholder or null during SSR to avoid hydration mismatch
   if (isMobile === undefined) return <div className="h-16 md:h-20" />;
 
   return isMobile ? <MobileHeader /> : <DesktopHeader />;
