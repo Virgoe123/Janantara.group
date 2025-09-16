@@ -29,13 +29,6 @@ export async function Hero() {
       
       <div className="relative container mx-auto px-4 md:px-6 z-30 flex-1 flex flex-col items-center justify-center pb-32">
           <div className="flex flex-col items-center space-y-6 text-center">
-            <Badge variant="outline" className="bg-white/10 border-white/30 text-white py-1 px-3">
-               <span className="relative flex h-2 w-2 mr-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-              </span>
-              Available For Impactful Work
-            </Badge>
             <div className="space-y-2">
               <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter font-headline leading-tight" style={{color: '#F9F4F0'}}>
                 DESIGN.DEVELOP.<br/>DELIVER.
@@ -73,5 +66,6 @@ export async function Hero() {
     </section>
   );
 }
+
 
 
