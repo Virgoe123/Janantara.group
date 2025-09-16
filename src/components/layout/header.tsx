@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 const Logo = ({ scrolled }: { scrolled: boolean }) => (
   <Link href="/" className="flex items-center gap-2" prefetch={false}>
     <Image src="https://res.cloudinary.com/dye07cjmn/image/upload/v1757992101/96b46217-0642-41b8-b06a-0ba5cb0d6572.png" alt="Janantara Logo" width={32} height={32} />
-    <span className={cn("text-lg font-semibold font-headline", scrolled ? "text-foreground" : "text-[#F9F4F0]")}>Janantara</span>
+    <span className={cn("text-lg font-semibold", scrolled ? "text-foreground" : "text-[#F9F4F0]")}>Janantara</span>
   </Link>
 );
 
@@ -65,14 +65,6 @@ const NavLinks = ({
       prefetch={false}
     >
       TESTIMONIALS
-    </Link>
-    <Link
-      href="/#contact"
-      className={cn("text-xs font-medium transition-colors", scrolled ? "text-muted-foreground hover:text-foreground" : "text-[#F9F4F0]/80 hover:text-[#F9F4F0]")}
-      onClick={onLinkClick}
-      prefetch={false}
-    >
-      CONTACT
     </Link>
   </nav>
 );
