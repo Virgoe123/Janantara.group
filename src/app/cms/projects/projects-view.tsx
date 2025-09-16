@@ -116,7 +116,7 @@ function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProj
                 <SelectValue placeholder="Select a client" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">No Client</SelectItem>
+                <SelectItem value="">No Client</SelectItem>
                 {clients.map((client) => (
                   <SelectItem key={client.id} value={client.id}>
                     {client.name}

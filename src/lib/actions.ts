@@ -155,7 +155,7 @@ export async function addProject(prevState: LoginState, formData: FormData): Pro
     description: description || null,
     link: link || null,
     image_url: publicUrl,
-    client_id: clientId === 'none' ? null : clientId
+    client_id: clientId === '' ? null : clientId
   };
 
   const { error: dbError } = await supabase.from('projects').insert([projectData]);
