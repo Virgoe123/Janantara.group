@@ -141,14 +141,14 @@ export async function addProject(prevState: LoginState, formData: FormData): Pro
   // Upload image
   const imageFileName = `${Date.now()}-${image.name}`;
   const { data: imageData, error: imageError } = await supabase.storage
-    .from('images')
-    .upload(`projects/${imageFileName}`, image);
+    .from('project_images')
+    .upload(`${imageFileName}`, image);
 
   if (imageError) {
     return { message: `Storage Error: ${imageError.message}`, success: false };
   }
 
-  const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(`projects/${imageFileName}`);
+  const { data: { publicUrl } } = supabase.storage.from('project_images').getPublicUrl(`${imageFileName}`);
   
   const projectData: any = {
     title,
@@ -161,7 +161,7 @@ export async function addProject(prevState: LoginState, formData: FormData): Pro
   const { error: dbError } = await supabase.from('projects').insert([projectData]);
 
   if (dbError) {
-     await supabase.storage.from('images').remove([`projects/${imageFileName}`]);
+     await supabase.storage.from('project_images').remove([`${imageFileName}`]);
     return { message: `Database Error: ${dbError.message}`, success: false };
   }
 
@@ -183,7 +183,7 @@ export async function deleteProject(id: string, imageUrl: string) {
   if (imageUrl) {
     const fileName = imageUrl.split('/').pop();
     if(fileName) {
-        const { error: storageError } = await supabase.storage.from('images').remove([`projects/${fileName}`]);
+        const { error: storageError } = await supabase.storage.from('project_images').remove([`${fileName}`]);
          if (storageError) {
             console.warn(`Could not delete image from storage: ${storageError.message}`);
          }
@@ -294,18 +294,18 @@ export async function addTeamMember(prevState: LoginState, formData: FormData): 
     const { name, role, image } = validatedFields.data;
 
     const imageFileName = `${Date.now()}-${image.name}`;
-    const { error: imageError } = await supabase.storage.from('images').upload(`team/${imageFileName}`, image);
+    const { error: imageError } = await supabase.storage.from('team_images').upload(`${imageFileName}`, image);
 
     if (imageError) {
         return { message: `Storage Error: ${imageError.message}`, success: false };
     }
 
-    const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(`team/${imageFileName}`);
+    const { data: { publicUrl } } = supabase.storage.from('team_images').getPublicUrl(`${imageFileName}`);
     
     const { error: dbError } = await supabase.from('team_members').insert([{ name, role, image_url: publicUrl }]);
 
     if (dbError) {
-        await supabase.storage.from('images').remove([`team/${imageFileName}`]);
+        await supabase.storage.from('team_images').remove([`${imageFileName}`]);
         return { message: `Database Error: ${dbError.message}`, success: false };
     }
     
@@ -327,7 +327,7 @@ export async function deleteTeamMember(id: string, imageUrl: string) {
     if (imageUrl) {
         const fileName = imageUrl.split('/').pop();
         if(fileName) {
-            const { error: storageError } = await supabase.storage.from('images').remove([`team/${fileName}`]);
+            const { error: storageError } = await supabase.storage.from('team_images').remove([`${fileName}`]);
             if (storageError) {
                 console.warn(`Could not delete image from storage: ${storageError.message}`);
             }
