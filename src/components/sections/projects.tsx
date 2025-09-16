@@ -20,21 +20,21 @@ const ProjectCard = ({ project }: { project: Project }) => {
 
   return (
     <Wrapper {...props}>
-       <Card className="overflow-hidden h-full group relative flex flex-col justify-end text-white">
+       <Card className="overflow-hidden h-full group relative flex flex-col justify-end text-white min-h-[400px]">
         {project.image_url ? (
           <Image
             src={project.image_url}
             alt={`Image for ${project.title}`}
             fill
-            className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105 -z-10"
+            className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
           />
         ) : (
-          <div className="absolute inset-0 bg-muted -z-10 flex items-center justify-center">
+          <div className="absolute inset-0 bg-muted z-0 flex items-center justify-center">
             <p className="text-muted-foreground">No Image</p>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent -z-10"></div>
-        <div className="p-6">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10"></div>
+        <div className="p-6 z-20">
           <h3 className="text-2xl font-bold">{project.title}</h3>
           {project.description && <p className="mt-2 text-white/80 line-clamp-2">{project.description}</p>}
            {project.link && (
