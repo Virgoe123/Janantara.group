@@ -3,7 +3,6 @@
 
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
-import Image from "next/image";
 import { addTeamMember, getTeamMembers, deleteTeamMember, LoginState } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,12 +57,12 @@ function SubmitButton() {
 
 function AddTeamMemberForm({ onMemberAdded }: { onMemberAdded: () => void }) {
   const { toast } = useToast();
-  const initialState: LoginState = { message: null, errors: {} };
+  const initialState: LoginState = { message: null, errors: {}, success: false };
   const [state, formAction] = useActionState(addTeamMember, initialState);
   const [formKey, setFormKey] = useState(Date.now().toString());
 
   useEffect(() => {
-    if (state?.message && !state.errors) {
+    if (state.success && state.message) {
       toast({
         title: "Success!",
         description: state.message,
@@ -71,7 +70,7 @@ function AddTeamMemberForm({ onMemberAdded }: { onMemberAdded: () => void }) {
       setFormKey(Date.now().toString());
       onMemberAdded();
     }
-  }, [state?.message, state?.errors, toast, onMemberAdded]);
+  }, [state, onMemberAdded, toast]);
 
   return (
     <Card>
@@ -98,7 +97,7 @@ function AddTeamMemberForm({ onMemberAdded }: { onMemberAdded: () => void }) {
             <Input id="image" name="image" type="file" required accept="image/*"/>
             {state?.errors?.image && <p className="text-sm text-destructive">{state.errors.image[0]}</p>}
           </div>
-          {state?.message && state.errors && (
+          {state?.message && !state.success && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Action Failed</AlertTitle>
@@ -192,33 +191,20 @@ function TeamList({ members, onMemberDeleted }: { members: TeamMember[], onMembe
   )
 }
 
-export default function TeamPage() {
-  const [members, setMembers] = useState<TeamMember[]>([]);
-  const [error, setError] = useState<string | null>(null);
+
+function TeamView({ initialMembers }: { initialMembers: TeamMember[] }) {
+  const [members, setMembers] = useState<TeamMember[]>(initialMembers);
   const { toast } = useToast();
 
   const fetchMembers = async () => {
     const memberResult = await getTeamMembers();
     if(memberResult.error) {
-      setError("Failed to load team members.");
-      toast({variant: "destructive", title: "Error", description: "Could not load team members."})
+      toast({variant: "destructive", title: "Error", description: "Could not refresh team members."})
     } else {
       setMembers(memberResult.data || []);
     }
   };
 
-  useEffect(() => {
-    fetchMembers();
-  }, []);
-
-  if(error) {
-    return <Alert variant="destructive">
-      <AlertCircle className="h-4 w-4" />
-      <AlertTitle>Error</AlertTitle>
-      <AlertDescription>{error}</AlertDescription>
-    </Alert>
-  }
-  
   return (
     <div className="grid gap-8">
       <AddTeamMemberForm onMemberAdded={fetchMembers}/>
@@ -233,4 +219,22 @@ export default function TeamPage() {
       </Card>
     </div>
   );
+}
+
+export default async function TeamPage() {
+  const { data: initialMembers, error } = await getTeamMembers();
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error Loading Data</AlertTitle>
+        <AlertDescription>
+          Could not load team members. There might be a problem with your database connection or security policies.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  return <TeamView initialMembers={initialMembers || []} />;
 }
