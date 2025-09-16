@@ -11,9 +11,9 @@ import { Wind } from "lucide-react";
 
 const Logo = () => (
   <Link href="/" className="flex items-center gap-2" prefetch={false}>
-    <Wind className="h-6 w-6" />
+    <Image src="https://res.cloudinary.com/dye07cjmn/image/upload/v1757992101/96b46217-0642-41b8-b06a-0ba5cb0d6572.png" alt="Janantara Logo" width={32} height={32} />
     <span className="text-xl font-bold tracking-tight text-foreground">
-      Webelix
+      Janantara
     </span>
   </Link>
 );
@@ -82,7 +82,7 @@ const DesktopHeader = () => (
     <Logo />
     <div className="flex items-center gap-6">
       <NavLinks className="flex items-center gap-x-6 text-sm" />
-      {/* <ThemeToggle /> */}
+      <ThemeToggle />
     </div>
   </header>
 );
@@ -94,7 +94,7 @@ const MobileHeader = () => {
     <header className="flex h-16 items-center justify-between px-4 md:hidden absolute top-0 z-50 w-full bg-transparent">
       <Logo />
       <div className="flex items-center gap-2">
-        {/* <ThemeToggle /> */}
+        <ThemeToggle />
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon">
