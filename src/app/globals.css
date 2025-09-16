@@ -83,9 +83,9 @@
     overflow: hidden;
     z-index: 1;
     transition: color 0.4s ease-in-out;
-    background-color: #F9F4F0;
+    background-color: transparent;
     border: 1px solid #F9F4F0;
-    color: hsl(var(--primary));
+    color: #F9F4F0;
   }
 
   .wave-button-green::before {
@@ -154,5 +154,12 @@
 
   .wave-button-green:hover.chat-bubble-button::after {
       border-top-color: hsl(var(--primary));
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+  .typing-cursor {
+    animation: blink 1s step-end infinite;
   }
 }

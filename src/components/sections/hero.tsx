@@ -7,6 +7,7 @@ import { ArrowRight, ArrowDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import HeroProjectCarousel from "./hero-project-carousel";
+import TypingTitle from "./typing-title";
 
 type Project = {
   id: string;
@@ -30,11 +31,11 @@ export async function Hero() {
       <div className="relative container mx-auto px-4 md:px-6 z-30 flex-1 flex flex-col items-center justify-center pb-32">
           <div className="flex flex-col items-center space-y-6 text-center">
             <div className="space-y-2">
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter font-headline leading-tight" style={{color: '#F9F4F0'}}>
-                DESIGN.DEVELOP.<br/>DELIVER.
-              </h1>
+                <div className="min-h-[180px] md:min-h-[220px] flex items-center justify-center">
+                   <TypingTitle />
+                </div>
               <p className="mx-auto max-w-[700px] text-[#F9F4F0]/80 md:text-xl/relaxed">
-                We are a software house crafting future-proof digital solutions custom-built to elevate your brand, drive growth, and adapt seamlessly to your business goals.
+                From the first sketch to the final launch, we make sure your project looks great and works even better
               </p>
             </div>
             <div className="pt-4">
@@ -66,6 +67,3 @@ export async function Hero() {
     </section>
   );
 }
-
-
-
