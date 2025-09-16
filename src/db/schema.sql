@@ -1,98 +1,113 @@
+-- Drop tables if they exist to start fresh
+DROP TABLE IF EXISTS "team_members";
+DROP TABLE IF EXISTS "services";
+DROP TABLE IF EXISTS "projects";
+DROP TABLE IF EXISTS "clients";
+
 -- Create clients table
-create table
-  public.clients (
-    id uuid not null default gen_random_uuid (),
-    created_at timestamp with time zone not null default now(),
-    name character varying not null,
-    constraint clients_pkey primary key (id)
-  ) tablespace pg_default;
-  
+CREATE TABLE clients (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- Create projects table
-create table
-  public.projects (
-    id uuid not null default gen_random_uuid (),
-    created_at timestamp with time zone not null default now(),
-    title character varying not null,
-    description text null,
-    image_url character varying null,
-    client_id uuid null,
-    link text null,
-    constraint projects_pkey primary key (id),
-    constraint projects_client_id_fkey foreign key (client_id) references clients (id) on delete set null
-  ) tablespace pg_default;
-  
+CREATE TABLE projects (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    description TEXT,
+    image_url TEXT,
+    link TEXT,
+    client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- Create services table
-create table
-  public.services (
-    id uuid not null default gen_random_uuid (),
-    created_at timestamp with time zone not null default now(),
-    title character varying not null,
-    description text not null,
-    icon character varying not null,
-    constraint services_pkey primary key (id)
-  ) tablespace pg_default;
-  
+CREATE TABLE services (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- Create team_members table
-create table
-  public.team_members (
-    id uuid not null default gen_random_uuid (),
-    created_at timestamp with time zone not null default now(),
-    name character varying not null,
-    role character varying not null,
-    image_url character varying null,
-    constraint team_members_pkey primary key (id)
-  ) tablespace pg_default;
-  
--- Create Storage buckets
-insert into storage.buckets (id, name, public)
-values ('project_images', 'project_images', true);
+CREATE TABLE team_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    role TEXT NOT NULL,
+    image_url TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 
-insert into storage.buckets (id, name, public)
-values ('team_images', 'team_images', true);
+-- Create storage buckets for images if they don't exist
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('project_images', 'project_images', true)
+ON CONFLICT (id) DO NOTHING;
 
--- RLS Policies for Storage
-create policy "Allow public read access to project images"
-on storage.objects for select
-using ( bucket_id = 'project_images' );
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('team_images', 'team_images', true)
+ON CONFLICT (id) DO NOTHING;
 
-create policy "Allow authenticated users to upload project images"
-on storage.objects for insert to authenticated
-with check ( bucket_id = 'project_images' );
 
-create policy "Allow public read access to team images"
-on storage.objects for select
-using ( bucket_id = 'team_images' );
+-- Drop old policies to avoid errors on re-run
+DROP POLICY IF EXISTS "Allow public read access on project_images" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated users to upload on project_images" ON storage.objects;
+DROP POLICY IF EXISTS "Allow public read access on team_images" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated users to upload on team_images" ON storage.objects;
 
-create policy "Allow authenticated users to upload team images"
-on storage.objects for insert to authenticated
-with check ( bucket_id = 'team_images' );
+-- Create policies for project_images bucket
+CREATE POLICY "Allow public read access on project_images"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'project_images');
 
--- Enable RLS for all tables
-alter table public.clients enable row level security;
-alter table public.projects enable row level security;
-alter table public.services enable row level security;
-alter table public.team_members enable row level security;
+CREATE POLICY "Allow authenticated users to upload on project_images"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'project_images');
 
--- Policies for 'clients' table
-create policy "Allow public read-only access" on public.clients
-for select using (true);
-create policy "Allow full access for authenticated users" on public.clients
-for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+-- Create policies for team_images bucket
+CREATE POLICY "Allow public read access on team_images"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'team_images');
 
--- Policies for 'projects' table
-create policy "Allow public read-only access" on public.projects
-for select using (true);
-create policy "Allow full access for authenticated users" on public.projects
-for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated users to upload on team_images"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'team_images');
 
--- Policies for 'services' table
-create policy "Allow public read-only access" on public.services
-for select using (true);
-create policy "Allow full access for authenticated users" on public.services
-for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
--- Policies for 'team_members' table
-create policy "Allow public read-only access" on public.team_members
-for select using (true);
-create policy "Allow full access for authenticated users" on public.team_members
-for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+-- Enable Row Level Security (RLS) for all tables
+ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE services ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
+
+-- Drop old RLS policies to avoid errors on re-run
+DROP POLICY IF EXISTS "Allow public read access" ON clients;
+DROP POLICY IF EXISTS "Allow authenticated users to manage clients" ON clients;
+DROP POLICY IF EXISTS "Allow public read access" ON projects;
+DROP POLICY IF EXISTS "Allow authenticated users to manage projects" ON projects;
+DROP POLICY IF EXISTS "Allow public read access" ON services;
+DROP POLICY IF EXISTS "Allow authenticated users to manage services" ON services;
+DROP POLICY IF EXISTS "Allow public read access" ON team_members;
+DROP POLICY IF EXISTS "Allow authenticated users to manage team members" ON team_members;
+
+-- Create RLS policies
+-- Clients
+CREATE POLICY "Allow public read access" ON clients FOR SELECT TO public USING (true);
+CREATE POLICY "Allow authenticated users to manage clients" ON clients FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- Projects
+CREATE POLICY "Allow public read access" ON projects FOR SELECT TO public USING (true);
+CREATE POLICY "Allow authenticated users to manage projects" ON projects FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- Services
+CREATE POLICY "Allow public read access" ON services FOR SELECT TO public USING (true);
+CREATE POLICY "Allow authenticated users to manage services" ON services FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- Team Members
+CREATE POLICY "Allow public read access" ON team_members FOR SELECT TO public USING (true);
+CREATE POLICY "Allow authenticated users to manage team members" ON team_members FOR ALL TO authenticated USING (true) WITH CHECK (true);
