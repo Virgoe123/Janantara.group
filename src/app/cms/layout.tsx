@@ -14,7 +14,7 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-import { LayoutDashboard, LogOut, Settings, Home } from "lucide-react";
+import { LayoutDashboard, LogOut, Settings, Home, Users } from "lucide-react";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -56,10 +56,18 @@ export default async function CmsLayout({
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive>
+              <SidebarMenuButton asChild>
                 <Link href="/cms">
                   <LayoutDashboard />
                   Dashboard
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/cms/clients">
+                  <Users />
+                  Clients
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

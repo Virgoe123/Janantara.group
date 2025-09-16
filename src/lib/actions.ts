@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { createClient } from './supabase/server';
+import { revalidatePath } from 'next/cache';
 
 export async function submitContactForm(data: { name: string; email: string; message:string }) {
   try {
@@ -67,4 +68,44 @@ export async function logout() {
   const supabase = createClient();
   await supabase.auth.signOut();
   redirect('/');
+}
+
+// Client Actions
+const ClientSchema = z.object({
+  name: z.string().min(2, "Client name must be at least 2 characters."),
+});
+
+export async function addClient(formData: FormData) {
+  const supabase = createClient();
+  const validatedFields = ClientSchema.safeParse({
+    name: formData.get('name'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      error: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+  
+  const { error } = await supabase
+    .from('clients')
+    .insert({ name: validatedFields.data.name });
+
+  if (error) {
+    console.error('Supabase error:', error);
+    return { error: 'Failed to add client.' };
+  }
+
+  revalidatePath('/cms/clients');
+  redirect('/cms/clients');
+}
+
+export async function getClients() {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('clients')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  return { data, error };
 }
