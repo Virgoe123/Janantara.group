@@ -86,9 +86,9 @@ body {
     position: relative;
     overflow: hidden;
     z-index: 1;
-    transition: color 0.6s ease-in-out;
-    background-color: transparent;
-    border: 1px solid hsl(var(--primary));
+    transition: color 0.4s ease-in-out;
+    background-color: #F9F4F0;
+    border: 1px solid #F9F4F0;
     color: hsl(var(--primary));
   }
 
@@ -101,7 +101,7 @@ body {
     height: 0%;
     background-color: hsl(var(--primary));
     z-index: -1;
-    transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .wave-button-green:hover {
@@ -111,6 +111,13 @@ body {
   .wave-button-green:hover::before {
     height: 100%;
   }
+
+  .wave-button-green:hover + .chat-bubble-button::after,
+  .wave-button-green:hover::after {
+    border-top-color: hsl(var(--primary));
+    transition: border-color 0.4s ease-in-out;
+  }
+
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
@@ -143,5 +150,10 @@ body {
     border-left: 8px solid transparent;
     border-right: 8px solid transparent;
     border-top: 8px solid #F9F4F0;
+    transition: border-color 0.4s ease-in-out;
+  }
+
+  .wave-button-green:hover.chat-bubble-button::after {
+      border-top-color: hsl(var(--primary));
   }
 }

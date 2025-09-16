@@ -45,7 +45,7 @@ export async function Hero() {
               </p>
             </div>
             <div className="pt-4">
-              <Button size="lg" asChild className="bg-[#F9F4F0] text-[#11793A] hover:bg-[#F9F4F0]/90 relative chat-bubble-button">
+              <Button size="lg" asChild className="wave-button-green chat-bubble-button">
                 <Link href="/#contact" prefetch={false}>
                   Let's Talk
                 </Link>
@@ -73,4 +73,5 @@ export async function Hero() {
     </section>
   );
 }
+
 
