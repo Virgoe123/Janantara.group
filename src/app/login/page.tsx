@@ -14,22 +14,21 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const initialState: LoginState = { message: null };
-  const authenticateAdmin = authenticate.bind(null, "/admin/dashboard");
-  const [state, dispatch] = useFormState(authenticateAdmin, initialState);
+  const authenticateUser = authenticate.bind(null, "/");
+  const [state, dispatch] = useFormState(authenticateUser, initialState);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-secondary">
       <Card className="w-full max-w-sm">
         <form action={dispatch}>
           <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
-            <CardDescription>Enter your email and password to login</CardDescription>
+            <CardTitle className="text-2xl font-bold">Login</CardTitle>
+            <CardDescription>Enter your email and password to access your account</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -58,11 +57,6 @@ export default function LoginPage() {
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <LoginButton />
-            <p className="text-xs text-center text-muted-foreground">
-              <Link href="/" className="underline hover:text-primary">
-                Back to main site
-              </Link>
-            </p>
           </CardFooter>
         </form>
       </Card>

@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -29,6 +30,7 @@ export type LoginState = {
 };
 
 export async function authenticate(
+  redirectTo: string,
   prevState: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
@@ -58,5 +60,5 @@ export async function authenticate(
     return { message: 'Invalid credentials. Please try again.' };
   }
 
-  return redirect('/admin/dashboard');
+  return redirect(redirectTo);
 }
