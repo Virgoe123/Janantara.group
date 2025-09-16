@@ -21,7 +21,7 @@ import { AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const initialState: LoginState = { message: null };
-  const authenticateAdmin = authenticate.bind(null, "/admin/dashboard");
+  const authenticateAdmin = authenticate.bind(null, "/cms");
   const [state, dispatch] = useActionState(authenticateAdmin, initialState);
 
   return (
