@@ -2,6 +2,39 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
+
+const projects = [
+  {
+    id: "1",
+    title: "E-commerce Platform for Innovate Inc.",
+    description: "A comprehensive e-commerce solution with a custom CMS and integrated payment gateways, boosting sales by 40%.",
+    image_url: PlaceHolderImages.find(img => img.id === 'project-1')?.imageUrl || "https://picsum.photos/seed/p1/600/400",
+    link: "https://example.com",
+  },
+  {
+    id: "2",
+    title: "Mobile Banking App for SecureBank",
+    description: "A secure and user-friendly mobile banking application for iOS and Android, featuring biometric authentication and P2P transfers.",
+    image_url: PlaceHolderImages.find(img => img.id === 'project-2')?.imageUrl || "https://picsum.photos/seed/p2/600/400",
+    link: null,
+  },
+  {
+    id: "3",
+    title: "Marketing Website for Creative Co.",
+    description: "A visually stunning and highly interactive marketing website built with Next.js and GSAP for a leading design agency.",
+    image_url: PlaceHolderImages.find(img => img.id === 'project-3')?.imageUrl || "https://picsum.photos/seed/p3/600/400",
+    link: "https://example.com",
+  },
+  {
+    id: "4",
+    title: "Data Visualization Dashboard",
+    description: "A real-time data visualization dashboard for a large enterprise, helping them track KPIs and make data-driven decisions.",
+    image_url: PlaceHolderImages.find(img => img.id === 'project-4')?.imageUrl || "https://picsum.photos/seed/p4/600/400",
+    link: null,
+  },
+];
+
 
 const ProjectCard = ({ project }: { project: any }) => {
   const Wrapper = project.link ? Link : 'div';
@@ -30,23 +63,7 @@ const ProjectCard = ({ project }: { project: any }) => {
   )
 }
 
-export async function Projects() {
-  // Supabase is removed, returning empty data
-  const { data: projects, error } = { data: [], error: null };
-
-  if (error || !projects || projects.length === 0) {
-    return (
-      <section id="projects" className="w-full py-12 md:py-24 lg:py-32">
-        <div className="container mx-auto px-4 md:px-6 text-center">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Our Work</h2>
-          <p className="mt-4 max-w-[900px] mx-auto text-muted-foreground md:text-xl/relaxed">
-            We are currently updating our portfolio. Please check back soon!
-          </p>
-        </div>
-      </section>
-    )
-  }
-
+export function Projects() {
   return (
     <section id="projects" className="w-full py-12 md:py-24 lg:py-32">
       <div className="container mx-auto px-4 md:px-6">

@@ -4,6 +4,46 @@ import * as LucideIcons from "lucide-react";
 
 type IconName = keyof typeof LucideIcons;
 
+const services = [
+  {
+    id: 1,
+    title: "Web Development",
+    description: "We build responsive, high-performance websites and web applications tailored to your business needs.",
+    icon: "Codepen"
+  },
+  {
+    id: 2,
+    title: "Mobile App Development",
+    description: "From iOS to Android, we create seamless mobile experiences that engage your users and drive growth.",
+    icon: "Smartphone"
+  },
+  {
+    id: 3,
+    title: "UI/UX Design",
+    description: "Our design team crafts intuitive and beautiful user interfaces that provide an exceptional user experience.",
+    icon: "PenTool"
+  },
+    {
+    id: 4,
+    title: "Digital Marketing",
+    description: "We help you reach your target audience and grow your brand through strategic digital marketing campaigns.",
+    icon: "Target"
+  },
+  {
+    id: 5,
+    title: "Cloud Solutions",
+    description: "Leverage the power of the cloud with our scalable and secure infrastructure solutions.",
+    icon: "Cloud"
+  },
+  {
+    id: 6,
+    title: "AI Integration",
+    description: "Integrate cutting-edge AI technology into your products to unlock new capabilities and efficiencies.",
+    icon: "BrainCircuit"
+  },
+];
+
+
 const Icon = ({ name, className }: { name: IconName; className?: string }) => {
   const LucideIcon = LucideIcons[name] as React.ElementType;
   if (!LucideIcon) {
@@ -12,23 +52,7 @@ const Icon = ({ name, className }: { name: IconName; className?: string }) => {
   return <LucideIcon className={className} />;
 };
 
-export async function Services() {
-  // Supabase is removed, returning empty data
-  const { data: services, error } = { data: [], error: null };
-
-  if (error || !services || services.length === 0) {
-    return (
-      <section id="services" className="w-full py-12 md:py-24 lg:py-32 bg-secondary">
-        <div className="container mx-auto px-4 md:px-6 text-center">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Our Services</h2>
-          <p className="mt-4 max-w-[900px] mx-auto text-muted-foreground md:text-xl/relaxed">
-            We are currently defining our service offerings. Please check back soon!
-          </p>
-        </div>
-      </section>
-    );
-  }
-
+export function Services() {
   return (
     <section id="services" className="w-full py-12 md:py-24 lg:py-32 bg-secondary">
       <div className="container mx-auto px-4 md:px-6">
