@@ -37,9 +37,11 @@ export function Hero() {
                 <span className="wave-bottom"></span>
               </Link>
             </Button>
-            <Button size="lg" variant="secondary" asChild>
+            <Button size="lg" asChild className="wave-button">
               <Link href="/#contact" prefetch={false}>
                 Get in Touch
+                <span className="wave-top"></span>
+                <span className="wave-bottom"></span>
               </Link>
             </Button>
           </div>
