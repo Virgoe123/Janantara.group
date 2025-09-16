@@ -118,7 +118,7 @@ body {
     overflow: hidden;
     z-index: 1;
     transition: color 0.4s ease-in-out;
-    background-color: hsl(var(--background));
+    background-color: transparent;
     color: hsl(var(--primary));
     border: 1px solid hsl(var(--primary));
   }
