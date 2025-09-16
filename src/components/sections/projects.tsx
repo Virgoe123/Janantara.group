@@ -1,10 +1,21 @@
 
+'use client';
+
 import Image from "next/image";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Project = {
   id: string;
@@ -14,60 +25,86 @@ type Project = {
   link: string | null;
 };
 
-const ProjectCard = ({ project, index }: { project: Project; index: number }) => {
+const ProjectCard = ({ project }: { project: Project }) => {
   const Wrapper = project.link ? Link : 'div';
   const props = project.link ? { href: project.link, target: "_blank", rel: "noopener noreferrer" } : {};
-  
-  // Base styles
-  let baseStyles = "relative shrink-0 w-[400px] h-[300px] md:w-[500px] md:h-[350px] rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 ease-in-out";
-  // Perspective styles based on index
-  let perspectiveStyles = "";
-  if (index === 0) perspectiveStyles = "md:rotate-y-15";
-  if (index === 1) perspectiveStyles = "md:rotate-y-5";
-  if (index === 3) perspectiveStyles = "md:rotate-y--5";
-  if (index === 4) perspectiveStyles = "md:rotate-y--15";
-
 
   return (
-    <div className="flex flex-col items-center gap-4 shrink-0">
-        <Wrapper {...props} className={cn(baseStyles, perspectiveStyles, "group")}>
-            {project.image_url ? (
-            <Image
-                src={project.image_url}
-                alt={`Image for ${project.title}`}
-                fill
-                className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
-            />
-            ) : (
-            <div className="absolute inset-0 bg-muted flex items-center justify-center">
-                <p className="text-muted-foreground">No Image</p>
-            </div>
-            )}
-             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-             {project.link && (
-                <div className="absolute bottom-4 right-4 z-10 p-2 bg-background/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-sm">
-                    <ArrowRight className="h-5 w-5 text-foreground" />
+     <Card className="overflow-hidden group">
+        <CardContent className="p-0">
+          <Wrapper {...props} className="relative block">
+              <div className="aspect-[4/3] w-full relative">
+                {project.image_url ? (
+                <Image
+                    src={project.image_url}
+                    alt={`Image for ${project.title}`}
+                    fill
+                    className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
+                />
+                ) : (
+                <div className="absolute inset-0 bg-muted flex items-center justify-center">
+                    <p className="text-muted-foreground">No Image</p>
                 </div>
-            )}
-        </Wrapper>
-        <div className="text-center">
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                {project.link && (
+                    <div className="absolute bottom-4 right-4 z-10 p-2 bg-background/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-sm">
+                        <ArrowRight className="h-5 w-5 text-foreground" />
+                    </div>
+                )}
+              </div>
+          </Wrapper>
+          <div className="p-4">
             <p className="font-semibold text-lg">{project.title}</p>
-        </div>
-    </div>
+            <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
+          </div>
+        </CardContent>
+     </Card>
   )
 }
 
-export async function Projects() {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-  const { data: projects, error } = await supabase
-    .from('projects')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(5);
+const ProjectSkeleton = () => (
+    <Card className="overflow-hidden">
+        <CardContent className="p-0">
+            <div className="aspect-[4/3] w-full bg-muted">
+                <Skeleton className="w-full h-full" />
+            </div>
+            <div className="p-4 space-y-2">
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-1/2" />
+            </div>
+        </CardContent>
+    </Card>
+)
+
+export function Projects() {
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchProjects = async () => {
+            const supabase = createClient();
+            const { data, error } = await supabase
+                .from('projects')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(9);
+            
+            if (error) {
+                console.error("Error fetching projects:", error);
+                setError("Could not load projects.");
+            } else {
+                setProjects(data as Project[]);
+            }
+            setIsLoading(false);
+        }
+        fetchProjects();
+    }, []);
 
   return (
-    <section id="projects" className="w-full py-12 md:py-24 lg:py-32 overflow-hidden">
+    <section id="projects" className="w-full py-12 md:py-24 lg:py-32">
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
           <div className="space-y-2">
@@ -77,50 +114,39 @@ export async function Projects() {
             </p>
           </div>
         </div>
-      </div>
 
-       {error && <p className="text-center text-destructive py-4">Could not load projects.</p>}
+       {error && <p className="text-center text-destructive py-4">{error}</p>}
        
-        {projects && projects.length > 0 ? (
-            <div 
-                className="relative flex items-center justify-center"
-                style={{ perspective: '2000px' }}
-            >
-                <div className="flex items-center justify-center gap-8 md:-gap-16 lg:-gap-24 overflow-x-auto pb-8 scrollbar-hide">
-                    {projects.map((project, index) => (
-                        <ProjectCard key={project.id} project={project} index={index} />
-                    ))}
-                </div>
-            </div>
-        ) : (
-            !error && <p className="text-center text-muted-foreground py-12">No projects have been added yet.</p>
-        )}
+       <Carousel
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          className="w-full max-w-6xl mx-auto"
+        >
+          <CarouselContent className="-ml-4">
+             {isLoading ? (
+                Array.from({ length: 3 }).map((_, index) => (
+                   <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                      <ProjectSkeleton />
+                   </CarouselItem>
+                ))
+             ) : projects && projects.length > 0 ? (
+                projects.map((project) => (
+                    <CarouselItem key={project.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                        <ProjectCard project={project} />
+                    </CarouselItem>
+                ))
+            ) : (
+                 <div className="w-full text-center col-span-full py-12">
+                    <p className="text-muted-foreground">No projects have been added yet.</p>
+                 </div>
+            )}
+          </CarouselContent>
+          <CarouselPrevious className="hidden sm:flex" />
+          <CarouselNext className="hidden sm:flex" />
+        </Carousel>
+      </div>
     </section>
   );
 }
-
-// Custom styles for 3D transforms - add to a global stylesheet or use a style tag if needed.
-// We'll try with tailwind arbitrary values first.
-// In tailwind.config.ts, under theme.extend, add:
-// rotate: {
-//   'y-15': 'rotateY(15deg)',
-//   'y--15': 'rotateY(-15deg)',
-//   'y-5': 'rotateY(5deg)',
-//   'y--5': 'rotateY(-5deg)',
-// }
-
-// And add a utility for scrollbar-hide
-// plugins: [
-//   plugin(function({ addUtilities }) {
-//     addUtilities({
-//       '.scrollbar-hide': {
-//         /* Firefox */
-//         'scrollbar-width': 'none',
-//         /* Safari and Chrome */
-//         '&::-webkit-scrollbar': {
-//           display: 'none'
-//         }
-//       }
-//     })
-//   })
-// ],
