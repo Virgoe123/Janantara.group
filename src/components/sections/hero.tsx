@@ -23,8 +23,8 @@ export async function Hero() {
     .limit(10);
     
   return (
-    <section id="home" className="relative w-full h-screen min-h-[700px] flex flex-col items-center justify-center overflow-hidden bg-[#11793A]">
-      <div className="absolute inset-0 vertical-lines opacity-20" />
+    <section id="home" className="relative w-full h-screen min-h-[700px] flex flex-col items-center overflow-hidden bg-[#11793A]">
+      <div className="absolute inset-0 subtle-grid-pattern opacity-20" />
       
       <div className="relative container mx-auto px-4 md:px-6 z-10 flex-1 flex flex-col items-center justify-center pb-32">
           <div className="flex flex-col items-center space-y-6 text-center">
