@@ -37,7 +37,7 @@ function SubmitButton() {
     )
 }
 
-function AddClientForm() {
+function AddClientForm({ onClientAdded }: { onClientAdded: () => void }) {
     const { toast } = useToast();
     const initialState: LoginState = { message: null, errors: {} };
     const [state, formAction] = useActionState(addClient, initialState);
@@ -51,8 +51,9 @@ function AddClientForm() {
         });
         // By changing the key, we force React to re-mount the form, thus clearing it.
         setFormKey(Date.now().toString());
+        onClientAdded();
       }
-    }, [state, toast]);
+    }, [state?.message, state?.errors, toast, onClientAdded]);
 
     return (
          <Card>
@@ -92,16 +93,7 @@ function AddClientForm() {
     )
 }
 
-async function ClientList() {
-  // This component will re-render when the path is revalidated
-  const clientsResult = await getClients();
-
-  if (clientsResult.error) {
-    return <p className="text-destructive">Error loading clients: {clientsResult.error.message}</p>
-  }
-  
-  const clients = clientsResult.data;
-
+function ClientList({ clients }: { clients: {id: string, name: string, created_at: string}[] }) {
   if (!clients || clients.length === 0) {
     return <p className="text-center text-muted-foreground">No clients found. Add one above to get started.</p>;
   }
@@ -129,17 +121,37 @@ async function ClientList() {
 }
 
 export default function ClientsPage() {
-  const [key, setKey] = useState(Date.now());
+  const [clients, setClients] = useState<{id: string, name: string, created_at: string}[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  // This is a bit of a hack to force the ClientList to re-fetch on state change from the form
-  // A more robust solution might involve a global state manager or context
-  const revalidateList = () => {
-    setKey(Date.now());
+  const fetchClients = async () => {
+    const clientsResult = await getClients();
+    if (clientsResult.error) {
+      setError("Failed to load clients.");
+      toast({variant: "destructive", title: "Error", description: "Could not load clients."});
+    } else {
+      setClients(clientsResult.data || []);
+    }
   };
+
+  useEffect(() => {
+    fetchClients();
+  }, []);
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className="grid gap-8">
-      <AddClientForm />
+      <AddClientForm onClientAdded={fetchClients} />
       
       <Card>
         <CardHeader>
@@ -147,7 +159,7 @@ export default function ClientsPage() {
             <CardDescription>A list of all your clients.</CardDescription>
         </CardHeader>
         <CardContent>
-           <ClientList key={key} />
+           <ClientList clients={clients} />
         </CardContent>
       </Card>
     </div>

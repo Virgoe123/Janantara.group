@@ -56,7 +56,7 @@ function SubmitButton() {
   );
 }
 
-function AddProjectForm({ clients }: { clients: Client[] }) {
+function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProjectAdded: () => void }) {
   const { toast } = useToast();
   const initialState: LoginState = { message: null, errors: {} };
   const [state, formAction] = useActionState(addProject, initialState);
@@ -70,8 +70,9 @@ function AddProjectForm({ clients }: { clients: Client[] }) {
       });
       // Reset form by changing key
       setFormKey(Date.now().toString());
+      onProjectAdded();
     }
-  }, [state, toast]);
+  }, [state?.message, state?.errors, toast, onProjectAdded]);
 
   return (
     <Card>
@@ -173,33 +174,35 @@ function ProjectsList({ projects }: { projects: Project[] }) {
 }
 
 export default function ProjectsPage() {
-  // We fetch data in the page component and pass it down to client components
   const [clients, setClients] = useState<Client[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const fetchClients = async () => {
+    const clientResult = await getClients();
+    if(clientResult.error) {
+      setError("Failed to load clients.");
+      toast({variant: "destructive", title: "Error", description: "Could not load clients."})
+    } else {
+      setClients(clientResult.data || []);
+    }
+  };
+
+  const fetchProjects = async () => {
+    const projectResult = await getProjects();
+    if(projectResult.error) {
+      setError("Failed to load projects.");
+      toast({variant: "destructive", title: "Error", description: "Could not load projects."})
+    } else {
+      setProjects(projectResult.data as any || []);
+    }
+  };
 
   useEffect(() => {
-    async function loadData() {
-      const clientResult = await getClients();
-      if(clientResult.error) {
-        setError("Failed to load clients.");
-        toast({variant: "destructive", title: "Error", description: "Could not load clients."})
-      } else {
-        setClients(clientResult.data || []);
-      }
-
-      const projectResult = await getProjects();
-      if(projectResult.error) {
-        setError("Failed to load projects.");
-        toast({variant: "destructive", title: "Error", description: "Could not load projects."})
-      } else {
-        setProjects(projectResult.data as any || []);
-      }
-    }
-    loadData();
+    fetchClients();
+    fetchProjects();
   }, []);
-
-  const { toast } = useToast();
 
   if(error) {
     return <Alert variant="destructive">
@@ -211,7 +214,7 @@ export default function ProjectsPage() {
   
   return (
     <div className="grid gap-8">
-      <AddProjectForm clients={clients} />
+      <AddProjectForm clients={clients} onProjectAdded={fetchProjects}/>
       <Card>
         <CardHeader>
           <CardTitle>Projects</CardTitle>
