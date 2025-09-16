@@ -72,9 +72,6 @@ const DesktopHeader = () => (
     <Logo />
     <div className="flex items-center gap-6">
       <NavLinks className="flex items-center gap-6 text-sm" />
-      <Button asChild>
-        <Link href="/ai-tool" prefetch={false}>AI Tool</Link>
-      </Button>
     </div>
   </header>
 );
@@ -99,9 +96,6 @@ const MobileHeader = () => {
               className="flex flex-col gap-4"
               onLinkClick={() => setIsOpen(false)}
             />
-            <Button asChild>
-              <Link href="/ai-tool" prefetch={false}>AI Tool</Link>
-            </Button>
           </div>
         </SheetContent>
       </Sheet>

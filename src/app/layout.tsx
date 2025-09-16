@@ -5,7 +5,7 @@ import { Footer } from '@/components/layout/footer';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Janantara Portfolio',
+  title: 'Janantara',
   description: 'Crafting Digital Excellence with Purpose and Precision.',
 };
 
