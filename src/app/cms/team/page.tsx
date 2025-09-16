@@ -5,9 +5,11 @@ import { getTeamMembers } from "@/lib/actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import TeamView from "./team-view";
+import { cookies } from "next/headers";
 
 export default async function TeamPage() {
-  const { data: initialMembers, error } = await getTeamMembers();
+  const cookieStore = cookies();
+  const { data: initialMembers, error } = await getTeamMembers(cookieStore);
 
   if (error) {
     return (

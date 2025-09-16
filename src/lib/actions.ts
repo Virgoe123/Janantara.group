@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { createClient } from './supabase/server';
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 
 export async function submitContactForm(data: { name: string; email: string; message:string }) {
   try {
@@ -39,7 +40,8 @@ export async function authenticate(
   prevState: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
-  const supabase = createClient();
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
   const validatedFields = LoginSchema.safeParse(
     Object.fromEntries(formData.entries()),
   );
@@ -70,7 +72,8 @@ export async function authenticate(
 }
 
 export async function logout() {
-  const supabase = createClient();
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
   await supabase.auth.signOut();
   redirect('/');
 }
@@ -81,7 +84,8 @@ const ClientSchema = z.object({
 });
 
 export async function addClient(prevState: LoginState, formData: FormData): Promise<LoginState> {
-  const supabase = createClient();
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
   const validatedFields = ClientSchema.safeParse({
     name: formData.get('name'),
   });
@@ -108,7 +112,8 @@ export async function addClient(prevState: LoginState, formData: FormData): Prom
 }
 
 export async function deleteClient(id: string) {
-  const supabase = createClient();
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
   const { error } = await supabase.from('clients').delete().match({ id });
 
   if (error) {
@@ -122,7 +127,8 @@ export async function deleteClient(id: string) {
 
 
 export async function getClients() {
-  const supabase = createClient();
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
   const { data, error } = await supabase
     .from('clients')
     .select('*')
@@ -143,7 +149,8 @@ const ProjectSchema = z.object({
 
 
 export async function addProject(prevState: LoginState, formData: FormData): Promise<LoginState> {
-    const supabase = createClient();
+    const cookieStore = cookies();
+    const supabase = createClient(cookieStore);
 
     const validatedFields = ProjectSchema.safeParse({
         title: formData.get('title'),
@@ -201,7 +208,8 @@ export async function addProject(prevState: LoginState, formData: FormData): Pro
 }
 
 export async function deleteProject(id: string, imageUrl: string) {
-  const supabase = createClient();
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
 
   // 1. Delete image from storage
   if (imageUrl) {
@@ -228,8 +236,8 @@ export async function deleteProject(id: string, imageUrl: string) {
 }
 
 
-export async function getProjects() {
-  const supabase = createClient();
+export async function getProjects(cookieStore: ReturnType<typeof cookies>) {
+  const supabase = createClient(cookieStore);
   const { data, error } = await supabase
     .from('projects')
     .select('*, clients(name)')
@@ -250,7 +258,8 @@ const ServiceSchema = z.object({
 });
 
 export async function addService(prevState: LoginState, formData: FormData): Promise<LoginState> {
-  const supabase = createClient();
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
 
   const validatedFields = ServiceSchema.safeParse({
     title: formData.get('title'),
@@ -285,7 +294,8 @@ export async function addService(prevState: LoginState, formData: FormData): Pro
 }
 
 export async function deleteService(id: string) {
-  const supabase = createClient();
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
   const { error } = await supabase.from('services').delete().match({ id });
 
   if (error) {
@@ -299,8 +309,8 @@ export async function deleteService(id: string) {
 }
 
 
-export async function getServices() {
-  const supabase = createClient();
+export async function getServices(cookieStore: ReturnType<typeof cookies>) {
+  const supabase = createClient(cookieStore);
   const { data, error } = await supabase
     .from('services')
     .select('*')
@@ -317,7 +327,8 @@ const TeamMemberSchema = z.object({
 });
 
 export async function addTeamMember(prevState: LoginState, formData: FormData): Promise<LoginState> {
-    const supabase = createClient();
+    const cookieStore = cookies();
+    const supabase = createClient(cookieStore);
 
     const validatedFields = TeamMemberSchema.safeParse({
         name: formData.get('name'),
@@ -371,7 +382,8 @@ export async function addTeamMember(prevState: LoginState, formData: FormData): 
 }
 
 export async function deleteTeamMember(id: string, imageUrl: string) {
-  const supabase = createClient();
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
 
   if (imageUrl) {
     const fileName = imageUrl.split('/').pop();
@@ -396,8 +408,8 @@ export async function deleteTeamMember(id: string, imageUrl: string) {
 }
 
 
-export async function getTeamMembers() {
-  const supabase = createClient();
+export async function getTeamMembers(cookieStore: ReturnType<typeof cookies>) {
+  const supabase = createClient(cookieStore);
   const { data, error } = await supabase
     .from('team_members')
     .select('*')

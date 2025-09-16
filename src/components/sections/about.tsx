@@ -2,9 +2,11 @@
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getTeamMembers } from "@/lib/actions";
+import { cookies } from "next/headers";
 
 export async function About() {
-  const { data: teamMembers, error } = await getTeamMembers();
+  const cookieStore = cookies();
+  const { data: teamMembers, error } = await getTeamMembers(cookieStore);
 
   return (
     <section id="about" className="w-full py-12 md:py-24 lg:py-32 bg-secondary">

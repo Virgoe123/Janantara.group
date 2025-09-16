@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getServices } from "@/lib/actions";
 import * as LucideIcons from "lucide-react";
+import { cookies } from "next/headers";
 
 type IconName = keyof typeof LucideIcons;
 
@@ -14,7 +15,8 @@ const Icon = ({ name, className }: { name: IconName; className?: string }) => {
 };
 
 export async function Services() {
-  const { data: services, error } = await getServices();
+  const cookieStore = cookies();
+  const { data: services, error } = await getServices(cookieStore);
 
   if (error || !services || services.length === 0) {
     return (

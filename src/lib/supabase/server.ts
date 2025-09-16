@@ -1,9 +1,13 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { type CookieOptions, createServerClient } from '@supabase/ssr'
 
-export function createClient() {
-  const cookieStore = cookies()
+// Define a generic type for the cookie store
+type CookieStore = {
+  get: (name: string) => { value: string } | undefined;
+  set: (name: string, value: string, options: CookieOptions) => void;
+  remove: (name: string, options: CookieOptions) => void;
+}
 
+export function createClient(cookieStore: CookieStore) {
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

@@ -48,6 +48,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Link as LinkIcon, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+import { cookies } from "next/headers";
 
 type Client = { id: string; name: string };
 type Project = { 
@@ -76,12 +77,13 @@ function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProj
   const [formKey, setFormKey] = useState(Date.now().toString());
 
   useEffect(() => {
-    if (state.success && state.message) {
-      toast({
-        title: "Success!",
-        description: state.message,
-      });
-      // Reset form by changing key
+    if (state.success) {
+      if (state.message) {
+        toast({
+          title: "Success!",
+          description: state.message,
+        });
+      }
       setFormKey(Date.now().toString());
       onProjectAdded();
     }
@@ -281,8 +283,9 @@ function ProjectsView({ initialClients, initialProjects }: { initialClients: Cli
 }
 
 export default async function ProjectsPage() {
-  const clientsResult = await getClients();
-  const projectsResult = await getProjects();
+  const cookieStore = cookies();
+  const clientsResult = await getClients(cookieStore);
+  const projectsResult = await getProjects(cookieStore);
 
   const error = clientsResult.error || projectsResult.error;
 

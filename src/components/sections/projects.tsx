@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getProjects } from "@/lib/actions";
+import { cookies } from "next/headers";
 
 const ProjectCard = ({ project }: { project: any }) => {
   const Wrapper = project.link ? Link : 'div';
@@ -32,7 +33,8 @@ const ProjectCard = ({ project }: { project: any }) => {
 }
 
 export async function Projects() {
-  const { data: projects, error } = await getProjects();
+  const cookieStore = cookies();
+  const { data: projects, error } = await getProjects(cookieStore);
 
   if (error || !projects || projects.length === 0) {
     return (
