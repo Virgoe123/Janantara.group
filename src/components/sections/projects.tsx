@@ -20,7 +20,7 @@ const ProjectCard = ({ project }: { project: Project }) => {
 
   return (
     <Wrapper {...props}>
-       <Card className="overflow-hidden h-full group relative flex flex-col justify-end text-white min-h-[400px]">
+       <Card className="overflow-hidden h-full group relative flex flex-col justify-end text-white min-h-[350px]">
         {project.image_url ? (
           <Image
             src={project.image_url}
@@ -69,7 +69,7 @@ export async function Projects() {
         </div>
          {error && <p className="text-center text-destructive py-4">Could not load projects.</p>}
         {projects && projects.length > 0 ? (
-            <div className="mx-auto grid max-w-5xl items-stretch gap-6 py-12 sm:grid-cols-2 md:gap-8 lg:max-w-none lg:grid-cols-2">
+            <div className="mx-auto grid max-w-5xl items-stretch gap-6 py-12 sm:grid-cols-2 md:gap-8 lg:max-w-none lg:grid-cols-3">
                 {projects.map((project) => (
                     <ProjectCard key={project.id} project={project} />
                 ))}
