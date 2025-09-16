@@ -69,12 +69,12 @@ function SubmitButton() {
 
 function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
     const { toast } = useToast();
-    const initialState: LoginState = { message: null, errors: {} };
+    const initialState: LoginState = { message: null, errors: {}, success: false };
     const [state, formAction] = useActionState(addService, initialState);
     const [formKey, setFormKey] = useState(Date.now().toString());
 
     useEffect(() => {
-      if (state?.message && !state.errors) {
+      if (state.success && state.message) {
         toast({
           title: "Success!",
           description: state.message,
@@ -82,7 +82,7 @@ function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
         setFormKey(Date.now().toString());
         onServiceAdded();
       }
-    }, [state, onServiceAdded, toast]);
+    }, [state.success, state.message, onServiceAdded, toast]);
 
     return (
          <Card>
@@ -109,7 +109,7 @@ function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
                     <Input id="icon" name="icon" placeholder="e.g., Codepen, Smartphone, PenTool" required />
                      {state?.errors?.icon && <p className="text-sm text-destructive">{state.errors.icon[0]}</p>}
                 </div>
-                 {state?.message && state.errors && (
+                 {state?.message && !state.success && (
                     <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Action Failed</AlertTitle>

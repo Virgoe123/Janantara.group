@@ -71,12 +71,12 @@ function SubmitButton() {
 
 function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProjectAdded: () => void }) {
   const { toast } = useToast();
-  const initialState: LoginState = { message: null, errors: {} };
+  const initialState: LoginState = { message: null, errors: {}, success: false };
   const [state, formAction] = useActionState(addProject, initialState);
   const [formKey, setFormKey] = useState(Date.now().toString());
 
   useEffect(() => {
-    if (state?.message && !state.errors) {
+    if (state.success && state.message) {
       toast({
         title: "Success!",
         description: state.message,
@@ -85,7 +85,7 @@ function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProj
       setFormKey(Date.now().toString());
       onProjectAdded();
     }
-  }, [state?.message, state?.errors, toast, onProjectAdded]);
+  }, [state.success, state.message, toast, onProjectAdded]);
 
   return (
     <Card>
@@ -134,7 +134,7 @@ function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProj
             <Input id="image" name="image" type="file" required accept="image/*"/>
             {state?.errors?.image && <p className="text-sm text-destructive">{state.errors.image[0]}</p>}
           </div>
-           {state?.message && state.errors && (
+           {state?.message && !state.success && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Action Failed</AlertTitle>

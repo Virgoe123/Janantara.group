@@ -50,12 +50,12 @@ function SubmitButton() {
 
 function AddClientForm({ onClientAdded }: { onClientAdded: () => void }) {
     const { toast } = useToast();
-    const initialState: LoginState = { message: null, errors: {} };
+    const initialState: LoginState = { message: null, errors: {}, success: false };
     const [state, formAction] = useActionState(addClient, initialState);
     const [formKey, setFormKey] = useState(Date.now().toString());
 
     useEffect(() => {
-      if (state?.message && !state.errors) {
+      if (state.success && state.message) {
         toast({
           title: "Success!",
           description: state.message,
@@ -63,7 +63,7 @@ function AddClientForm({ onClientAdded }: { onClientAdded: () => void }) {
         setFormKey(Date.now().toString());
         onClientAdded();
       }
-    }, [state?.message, state?.errors, toast, onClientAdded]);
+    }, [state.success, state.message, toast, onClientAdded]);
 
     return (
          <Card>
@@ -85,7 +85,7 @@ function AddClientForm({ onClientAdded }: { onClientAdded: () => void }) {
                 />
                 {state?.errors?.name && <p className="text-sm text-destructive">{state.errors.name[0]}</p>}
                 </div>
-                 {state?.message && state.errors && (
+                 {state?.message && !state.success && (
                     <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Action Failed</AlertTitle>

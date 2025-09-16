@@ -30,7 +30,8 @@ export type LoginState = {
   message?: string | null;
   errors?: {
     [key: string]: string[] | undefined;
-  }
+  },
+  success?: boolean;
 };
 
 export async function authenticate(
@@ -38,7 +39,7 @@ export async function authenticate(
   prevState: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
-  
+  const supabase = createClient();
   const validatedFields = LoginSchema.safeParse(
     Object.fromEntries(formData.entries()),
   );
@@ -48,11 +49,11 @@ export async function authenticate(
     const firstError = errorMessages.email?.[0] ?? errorMessages.password?.[0] ?? 'Invalid fields. Failed to login.';
     return {
       message: firstError,
+      success: false,
     };
   }
 
   const { email, password } = validatedFields.data;
-  const supabase = createClient();
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -61,7 +62,7 @@ export async function authenticate(
 
   if (error) {
     console.error('Supabase Auth Error:', error.message);
-    return { message: 'Invalid credentials. Please try again.' };
+    return { message: 'Invalid credentials. Please try again.', success: false };
   }
 
   revalidatePath(redirectTo);
@@ -79,7 +80,7 @@ const ClientSchema = z.object({
   name: z.string().min(2, "Client name must be at least 2 characters."),
 });
 
-export async function addClient(prevState: LoginState, formData: FormData) {
+export async function addClient(prevState: LoginState, formData: FormData): Promise<LoginState> {
   const supabase = createClient();
   const validatedFields = ClientSchema.safeParse({
     name: formData.get('name'),
@@ -89,6 +90,7 @@ export async function addClient(prevState: LoginState, formData: FormData) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Failed to add client.',
+      success: false,
     };
   }
   
@@ -98,11 +100,11 @@ export async function addClient(prevState: LoginState, formData: FormData) {
 
   if (error) {
     console.error('Supabase error:', error);
-    return { message: 'Database Error: Failed to add client.' };
+    return { message: 'Database Error: Failed to add client.', success: false };
   }
 
   revalidatePath('/cms/clients');
-  return { message: `Added client ${validatedFields.data.name}.` };
+  return { message: `Added client ${validatedFields.data.name}.`, success: true };
 }
 
 export async function deleteClient(id: string) {
@@ -140,7 +142,7 @@ const ProjectSchema = z.object({
 });
 
 
-export async function addProject(prevState: LoginState, formData: FormData) {
+export async function addProject(prevState: LoginState, formData: FormData): Promise<LoginState> {
     const supabase = createClient();
 
     const validatedFields = ProjectSchema.safeParse({
@@ -155,6 +157,7 @@ export async function addProject(prevState: LoginState, formData: FormData) {
         return {
             errors: validatedFields.error.flatten().fieldErrors,
             message: 'Failed to create project. Please check the fields.',
+            success: false,
         };
     }
 
@@ -168,7 +171,7 @@ export async function addProject(prevState: LoginState, formData: FormData) {
 
     if (uploadError) {
         console.error('Storage Error:', uploadError);
-        return { message: 'Database Error: Failed to upload image.' };
+        return { message: 'Database Error: Failed to upload image.', success: false };
     }
 
     // 2. Get public URL of the uploaded image
@@ -189,13 +192,12 @@ export async function addProject(prevState: LoginState, formData: FormData) {
 
     if (insertError) {
         console.error('Insert Error:', insertError);
-        // If insert fails, maybe delete the uploaded image? (optional)
-        return { message: 'Database Error: Failed to save project.' };
+        return { message: 'Database Error: Failed to save project.', success: false };
     }
 
     revalidatePath('/cms/projects');
     revalidatePath('/#projects');
-    return { message: `Successfully added project "${title}".` };
+    return { message: `Successfully added project "${title}".`, success: true };
 }
 
 export async function deleteProject(id: string, imageUrl: string) {
@@ -247,7 +249,7 @@ const ServiceSchema = z.object({
   icon: z.string().min(2, "Icon name is required."),
 });
 
-export async function addService(prevState: LoginState, formData: FormData) {
+export async function addService(prevState: LoginState, formData: FormData): Promise<LoginState> {
   const supabase = createClient();
 
   const validatedFields = ServiceSchema.safeParse({
@@ -260,6 +262,7 @@ export async function addService(prevState: LoginState, formData: FormData) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Failed to add service.',
+      success: false,
     };
   }
 
@@ -273,12 +276,12 @@ export async function addService(prevState: LoginState, formData: FormData) {
 
   if (error) {
     console.error('Supabase error:', error);
-    return { message: 'Database Error: Failed to add service.' };
+    return { message: 'Database Error: Failed to add service.', success: false };
   }
 
   revalidatePath('/cms/services');
   revalidatePath('/#services');
-  return { message: `Added service "${title}".` };
+  return { message: `Added service "${title}".`, success: true };
 }
 
 export async function deleteService(id: string) {
@@ -313,7 +316,7 @@ const TeamMemberSchema = z.object({
   image: z.instanceof(File).refine(file => file.size > 0, "Image is required.").refine(file => file.size < 4 * 1024 * 1024, "Image must be less than 4MB."),
 });
 
-export async function addTeamMember(prevState: LoginState, formData: FormData) {
+export async function addTeamMember(prevState: LoginState, formData: FormData): Promise<LoginState> {
     const supabase = createClient();
 
     const validatedFields = TeamMemberSchema.safeParse({
@@ -326,6 +329,7 @@ export async function addTeamMember(prevState: LoginState, formData: FormData) {
         return {
             errors: validatedFields.error.flatten().fieldErrors,
             message: 'Failed to add team member. Please check the fields.',
+            success: false,
         };
     }
 
@@ -339,7 +343,7 @@ export async function addTeamMember(prevState: LoginState, formData: FormData) {
 
     if (uploadError) {
         console.error('Storage Error:', uploadError);
-        return { message: 'Database Error: Failed to upload image.' };
+        return { message: 'Database Error: Failed to upload image.', success: false };
     }
 
     // 2. Get public URL of the uploaded image
@@ -358,12 +362,12 @@ export async function addTeamMember(prevState: LoginState, formData: FormData) {
 
     if (insertError) {
         console.error('Insert Error:', insertError);
-        return { message: 'Database Error: Failed to save team member.' };
+        return { message: 'Database Error: Failed to save team member.', success: false };
     }
 
     revalidatePath('/cms/team');
     revalidatePath('/#about');
-    return { message: `Successfully added team member "${name}".` };
+    return { message: `Successfully added team member "${name}".`, success: true };
 }
 
 export async function deleteTeamMember(id: string, imageUrl: string) {

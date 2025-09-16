@@ -70,7 +70,7 @@ function AddTeamMemberForm({ onMemberAdded }: { onMemberAdded: () => void }) {
       setFormKey(Date.now().toString());
       onMemberAdded();
     }
-  }, [state, onMemberAdded, toast]);
+  }, [state.success, state.message, onMemberAdded, toast]);
 
   return (
     <Card>
