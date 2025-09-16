@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 const GradientOrb = ({ className, ...props }: { className?: string, style?: React.CSSProperties }) => {
   return (
     <div
-      className={cn("absolute -z-10 rounded-full bg-gradient-to-tr from-primary/20 to-primary/5 blur-2xl", className)}
+      className={cn("absolute -z-10 rounded-full bg-gradient-to-tr from-primary/30 to-primary/10 blur-xl", className)}
       {...props}
     />
   );
