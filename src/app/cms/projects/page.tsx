@@ -34,8 +34,9 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Link as LinkIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
 
 type Client = { id: string; name: string };
 type Project = { 
@@ -43,6 +44,7 @@ type Project = {
   title: string; 
   description: string | null;
   image_url: string | null;
+  link: string | null;
   created_at: string;
   clients: { name: string } | null;
 };
@@ -88,6 +90,11 @@ function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProj
             <Label htmlFor="title">Project Title</Label>
             <Input id="title" name="title" placeholder="e.g., Awesome Mobile App" required />
             {state?.errors?.title && <p className="text-sm text-destructive">{state.errors.title[0]}</p>}
+          </div>
+           <div className="space-y-2">
+            <Label htmlFor="link">Project Link (Optional)</Label>
+            <Input id="link" name="link" placeholder="https://example.com" />
+            {state?.errors?.link && <p className="text-sm text-destructive">{state.errors.link[0]}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="clientId">Client (Optional)</Label>
@@ -145,6 +152,7 @@ function ProjectsList({ projects }: { projects: Project[] }) {
             <TableHead className="w-[80px]">Image</TableHead>
             <TableHead>Title</TableHead>
             <TableHead>Client</TableHead>
+            <TableHead>Link</TableHead>
             <TableHead>Created</TableHead>
           </TableRow>
         </TableHeader>
@@ -164,6 +172,13 @@ function ProjectsList({ projects }: { projects: Project[] }) {
               </TableCell>
               <TableCell className="font-medium">{project.title}</TableCell>
                <TableCell>{project.clients?.name ?? 'N/A'}</TableCell>
+               <TableCell>
+                {project.link ? (
+                  <Link href={project.link} target="_blank" rel="noopener noreferrer">
+                    <LinkIcon className="h-4 w-4" />
+                  </Link>
+                ) : 'N/A'}
+               </TableCell>
               <TableCell>{formatDistanceToNow(new Date(project.created_at), { addSuffix: true })}</TableCell>
             </TableRow>
           ))}

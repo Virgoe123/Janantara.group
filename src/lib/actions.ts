@@ -124,6 +124,7 @@ const ProjectSchema = z.object({
   description: z.string().optional(),
   clientId: z.string().uuid("Invalid client ID.").optional().or(z.literal('none')).or(z.literal('')),
   image: z.instanceof(File).refine(file => file.size > 0, "Project image is required.").refine(file => file.size < 4 * 1024 * 1024, "Image must be less than 4MB."),
+  link: z.string().url("Please enter a valid URL.").optional().or(z.literal('')),
 });
 
 
@@ -135,6 +136,7 @@ export async function addProject(prevState: LoginState, formData: FormData) {
         description: formData.get('description'),
         clientId: formData.get('clientId'),
         image: formData.get('image'),
+        link: formData.get('link'),
     });
 
     if (!validatedFields.success) {
@@ -144,7 +146,7 @@ export async function addProject(prevState: LoginState, formData: FormData) {
         };
     }
 
-    const { title, description, clientId, image } = validatedFields.data;
+    const { title, description, clientId, image, link } = validatedFields.data;
 
     // 1. Upload image to Supabase Storage
     const imageFileName = `${crypto.randomUUID()}-${image.name}`;
@@ -170,6 +172,7 @@ export async function addProject(prevState: LoginState, formData: FormData) {
         description,
         client_id: clientId === 'none' || clientId === '' ? null : clientId,
         image_url: imageUrl,
+        link: link || null,
     });
 
     if (insertError) {
@@ -179,6 +182,7 @@ export async function addProject(prevState: LoginState, formData: FormData) {
     }
 
     revalidatePath('/cms/projects');
+    revalidatePath('/#projects');
     return { message: `Successfully added project "${title}".` };
 }
 
