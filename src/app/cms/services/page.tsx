@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useEffect, useState, useTransition, useCallback, useActionState } from "react";
+import { useEffect, useState, useCallback, useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { addService, getServices, deleteService, LoginState } from "@/lib/actions";
 import {
@@ -39,6 +39,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Trash2 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 type IconName = keyof typeof LucideIcons;
 
@@ -52,7 +54,7 @@ type Service = {
 const Icon = ({ name, className }: { name: IconName; className?: string }) => {
   const LucideIcon = LucideIcons[name] as React.ElementType;
   if (!LucideIcon) {
-    return <LucideIcons.AlertCircle className={className} />;
+    return <LucideIcons.HelpCircle className={className} />;
   }
   return <LucideIcon className={className} />;
 };
@@ -91,7 +93,7 @@ function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
             <CardHeader>
             <CardTitle>Add New Service</CardTitle>
             <CardDescription>
-                Fill out the details for the new service. The icon name must match an icon from 'lucide-react'.
+                Fill out the details for the new service. The icon name must match a name from 'lucide-react'.
             </CardDescription>
             </CardHeader>
             <form action={formAction} key={formKey}>
@@ -129,24 +131,51 @@ function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
     )
 }
 
-function ServiceList({ services, onServiceDeleted }: { services: Service[], onServiceDeleted: () => void }) {
-  const [isPending, startTransition] = useTransition();
+function ServiceList({ services, onServiceDeleted, isLoading }: { services: Service[], onServiceDeleted: (id: string) => void, isLoading: boolean }) {
+  const [isDeleting, setIsDeleting] = useState<string|null>(null);
   const { toast } = useToast();
 
-  const handleDelete = (id: string) => {
-    startTransition(async () => {
-      const result = await deleteService(id);
-      if (result.success) {
-        toast({ title: "Success", description: result.message });
-        onServiceDeleted();
-      } else {
-        toast({ variant: "destructive", title: "Error", description: result.message });
-      }
-    });
+  const handleDelete = async (id: string) => {
+    setIsDeleting(id);
+    const result = await deleteService(id);
+    if (result.success) {
+      toast({ title: "Success", description: result.message });
+      onServiceDeleted(id);
+    } else {
+      toast({ variant: "destructive", title: "Error", description: result.message });
+    }
+    setIsDeleting(null);
   };
+  
+  if (isLoading) {
+    return (
+        <div className="border rounded-lg">
+            <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px]">Icon</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {[...Array(3)].map((_, i) => (
+                        <TableRow key={i}>
+                            <TableCell><Skeleton className="h-5 w-5" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-full" /></TableCell>
+                            <TableCell className="text-right"><Skeleton className="h-8 w-8 inline-block" /></TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
+    )
+  }
 
-  if (!services || services.length === 0) {
-    return <p className="text-center text-muted-foreground">No services found. Add one above to get started.</p>;
+  if (services.length === 0) {
+    return <p className="text-center text-muted-foreground pt-4">No services found. Add one above to get started.</p>;
   }
 
   return (
@@ -162,7 +191,7 @@ function ServiceList({ services, onServiceDeleted }: { services: Service[], onSe
         </TableHeader>
         <TableBody>
           {services.map((service) => (
-            <TableRow key={service.id}>
+            <TableRow key={service.id} className={isDeleting === service.id ? 'opacity-50' : ''}>
               <TableCell>
                   <Icon name={service.icon as IconName} className="h-5 w-5" />
               </TableCell>
@@ -171,7 +200,7 @@ function ServiceList({ services, onServiceDeleted }: { services: Service[], onSe
               <TableCell className="text-right">
                  <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" disabled={isPending}>
+                    <Button variant="ghost" size="icon" disabled={!!isDeleting}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </AlertDialogTrigger>
@@ -204,36 +233,35 @@ function ServiceList({ services, onServiceDeleted }: { services: Service[], onSe
 
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   const fetchServices = useCallback(async () => {
+    setIsLoading(true);
     const servicesResult = await getServices();
     if (servicesResult.error) {
-      setError("Failed to load services.");
       toast({variant: "destructive", title: "Error", description: "Could not load services."});
     } else {
       setServices(servicesResult.data || []);
     }
+    setIsLoading(false);
   }, [toast]);
 
   useEffect(() => {
     fetchServices();
   }, [fetchServices]);
-
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
+  
+  const handleServiceAdded = () => {
+      fetchServices();
+  }
+  
+  const handleServiceDeleted = (deletedId: string) => {
+      setServices(prev => prev.filter(s => s.id !== deletedId));
   }
 
   return (
     <div className="grid gap-8">
-      <AddServiceForm onServiceAdded={fetchServices} />
+      <AddServiceForm onServiceAdded={handleServiceAdded} />
       
       <Card>
         <CardHeader>
@@ -241,9 +269,11 @@ export default function ServicesPage() {
             <CardDescription>A list of all your offered services.</CardDescription>
         </CardHeader>
         <CardContent>
-           <ServiceList services={services} onServiceDeleted={fetchServices}/>
+           <ServiceList services={services} onServiceDeleted={handleServiceDeleted} isLoading={isLoading}/>
         </CardContent>
       </Card>
     </div>
   );
 }
+
+    

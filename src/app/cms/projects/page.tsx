@@ -16,9 +16,8 @@ type Project = {
 };
 
 export default async function ProjectsPage() {
-  // Supabase is removed, returning empty data
-  const clientsResult = { data: [], error: null };
-  const projectsResult = { data: [], error: null };
+  const clientsResult = await getClients();
+  const projectsResult = await getProjects();
 
   const error = clientsResult.error || projectsResult.error;
 
@@ -35,7 +34,9 @@ export default async function ProjectsPage() {
   }
 
   return <ProjectsView 
-            initialClients={clientsResult.data || []} 
+            initialClients={clientsResult.data as Client[] || []} 
             initialProjects={(projectsResult.data as Project[]) || []} 
          />;
 }
+
+    

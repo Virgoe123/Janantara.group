@@ -4,7 +4,7 @@
 import { useState, useTransition, useCallback, useEffect, useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import Image from "next/image";
-import { addProject, getClients, getProjects, deleteProject, LoginState } from "@/lib/actions";
+import { getClients, getProjects, deleteProject, LoginState, addProject } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -48,6 +48,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Link as LinkIcon, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Client = { id: string; name: string };
 type Project = { 
@@ -126,7 +127,7 @@ function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProj
             {state?.errors?.clientId && <p className="text-sm text-destructive">{state.errors.clientId[0]}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Description (Optional)</Label>
             <Textarea id="description" name="description" placeholder="A short description of the project."/>
              {state?.errors?.description && <p className="text-sm text-destructive">{state.errors.description[0]}</p>}
           </div>
@@ -151,24 +152,55 @@ function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProj
   );
 }
 
-function ProjectsList({ projects, onProjectDeleted }: { projects: Project[], onProjectDeleted: () => void }) {
-  const [isPending, startTransition] = useTransition();
+function ProjectsList({ projects, onProjectDeleted, isLoading }: { projects: Project[], onProjectDeleted: (id:string) => void, isLoading: boolean }) {
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const handleDelete = (id: string, imageUrl: string | null) => {
-    startTransition(async () => {
-      const result = await deleteProject(id, imageUrl || '');
-      if (result.success) {
-        toast({ title: "Success", description: result.message });
-        onProjectDeleted();
-      } else {
-        toast({ variant: "destructive", title: "Error", description: result.message });
-      }
-    });
+  const handleDelete = async (id: string, imageUrl: string | null) => {
+    setIsDeleting(id);
+    const result = await deleteProject(id, imageUrl || '');
+    if (result.success) {
+      toast({ title: "Success", description: result.message });
+      onProjectDeleted(id);
+    } else {
+      toast({ variant: "destructive", title: "Error", description: result.message });
+    }
+    setIsDeleting(null);
   };
 
+   if (isLoading) {
+       return (
+        <div className="border rounded-lg">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead className="w-[80px]">Image</TableHead>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Client</TableHead>
+                        <TableHead>Link</TableHead>
+                        <TableHead>Created</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {[...Array(3)].map((_, i) => (
+                        <TableRow key={i}>
+                            <TableCell><Skeleton className="h-16 w-16 rounded-md" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-5" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                            <TableCell className="text-right"><Skeleton className="h-8 w-8 inline-block" /></TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
+       )
+   }
+
    if (projects.length === 0) {
-    return <p className="text-center text-muted-foreground">No projects found. Add one above to get started.</p>;
+    return <p className="text-center text-muted-foreground pt-4">No projects found. Add one above to get started.</p>;
   }
 
   return (
@@ -186,7 +218,7 @@ function ProjectsList({ projects, onProjectDeleted }: { projects: Project[], onP
         </TableHeader>
         <TableBody>
           {projects.map((project) => (
-            <TableRow key={project.id}>
+            <TableRow key={project.id} className={isDeleting === project.id ? 'opacity-50' : ''}>
               <TableCell>
                 {project.image_url && (
                   <Image 
@@ -211,7 +243,7 @@ function ProjectsList({ projects, onProjectDeleted }: { projects: Project[], onP
               <TableCell className="text-right">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" disabled={isPending}>
+                    <Button variant="ghost" size="icon" disabled={!!isDeleting}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </AlertDialogTrigger>
@@ -245,38 +277,48 @@ function ProjectsList({ projects, onProjectDeleted }: { projects: Project[], onP
 export default function ProjectsView({ initialClients, initialProjects }: { initialClients: Client[], initialProjects: Project[] }) {
   const [clients, setClients] = useState<Client[]>(initialClients);
   const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const { toast } = useToast();
 
-  const fetchClients = useCallback(async () => {
-    const clientResult = await getClients();
+  const fetchClientsAndProjects = useCallback(async () => {
+    setIsLoadingProjects(true);
+    const [clientResult, projectResult] = await Promise.all([
+        getClients(),
+        getProjects()
+    ]);
+    
     if (clientResult.error) {
       toast({ variant: "destructive", title: "Error", description: "Could not refresh clients." });
     } else {
       setClients(clientResult.data || []);
     }
-  }, [toast]);
 
-  const fetchProjects = useCallback(async () => {
-    const projectResult = await getProjects();
     if (projectResult.error) {
       toast({ variant: "destructive", title: "Error", description: "Could not refresh projects." });
     } else {
       setProjects(projectResult.data as any || []);
     }
+    setIsLoadingProjects(false);
   }, [toast]);
+  
+  const handleProjectDeleted = (deletedId: string) => {
+      setProjects(prev => prev.filter(p => p.id !== deletedId));
+  }
   
   return (
     <div className="grid gap-8">
-      <AddProjectForm clients={clients} onProjectAdded={fetchProjects}/>
+      <AddProjectForm clients={clients} onProjectAdded={fetchClientsAndProjects}/>
       <Card>
         <CardHeader>
           <CardTitle>Projects</CardTitle>
           <CardDescription>A list of all your portfolio projects.</CardDescription>
         </CardHeader>
         <CardContent>
-          <ProjectsList projects={projects} onProjectDeleted={fetchProjects}/>
+          <ProjectsList projects={projects} onProjectDeleted={handleProjectDeleted} isLoading={isLoadingProjects}/>
         </CardContent>
       </Card>
     </div>
   );
 }
+
+    

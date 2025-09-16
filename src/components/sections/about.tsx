@@ -1,41 +1,23 @@
 
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { getTeamMembers } from "@/lib/actions";
+import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 
-const teamMembers = [
-  {
-    id: '1',
-    name: 'Aria Wirawan',
-    role: 'Lead Developer',
-    image_url: PlaceHolderImages.find(img => img.id === 'team-1')?.imageUrl || "https://picsum.photos/seed/t1/100/100",
-    imageHint: 'professional portrait'
-  },
-  {
-    id: '2',
-    name: 'Bima Sakti',
-    role: 'UI/UX Designer',
-    image_url: PlaceHolderImages.find(img => img.id === 'team-2')?.imageUrl || "https://picsum.photos/seed/t2/100/100",
-    imageHint: 'person smiling'
-  },
-  {
-    id: '3',
-    name: 'Citra Lestari',
-    role: 'Project Manager',
-    image_url: PlaceHolderImages.find(img => img.id === 'team-3')?.imageUrl || "https://picsum.photos/seed/t3/100/100",
-    imageHint: 'woman developer'
-  },
-  {
-    id: '4',
-    name: 'Dharma Putra',
-    role: 'Frontend Developer',
-    image_url: PlaceHolderImages.find(img => img.id === 'team-4')?.imageUrl || "https://picsum.photos/seed/t4/100/100",
-    imageHint: 'man office'
-  },
-];
+type TeamMember = {
+  id: string;
+  name: string;
+  role: string;
+  image_url: string | null;
+};
 
+export async function About() {
+  const cookieStore = cookies();
+  // Use server client to fetch data for SSR
+  const supabase = createClient(cookieStore); 
+  const { data: teamMembers, error } = await supabase.from('team_members').select('*');
 
-export function About() {
   return (
     <section id="about" className="w-full py-12 md:py-24 lg:py-32 bg-secondary">
       <div className="container mx-auto grid items-center gap-6 px-4 md:px-6 lg:grid-cols-2 lg:gap-10">
@@ -50,20 +32,27 @@ export function About() {
         </div>
         <div className="flex flex-col items-center space-y-4">
           <h3 className="text-2xl font-bold tracking-tighter sm:text-3xl font-headline">Our Team</h3>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-              {teamMembers.map((member: any) => (
-                  <div key={member.id} className="flex flex-col items-center text-center">
-                    <Avatar className="h-24 w-24 border-2 border-primary">
-                      {member.image_url && <AvatarImage src={member.image_url} alt={member.name} data-ai-hint={member.imageHint} />}
-                      <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <p className="mt-2 font-semibold">{member.name}</p>
-                    <p className="text-sm text-muted-foreground">{member.role}</p>
-                  </div>
-              ))}
-            </div>
+          {error && <p className="text-destructive">Could not load team members.</p>}
+          {teamMembers && teamMembers.length > 0 ? (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+                {teamMembers.map((member: TeamMember) => (
+                    <div key={member.id} className="flex flex-col items-center text-center">
+                      <Avatar className="h-24 w-24 border-2 border-primary">
+                        {member.image_url && <AvatarImage src={member.image_url} alt={member.name} data-ai-hint="professional portrait" />}
+                        <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <p className="mt-2 font-semibold">{member.name}</p>
+                      <p className="text-sm text-muted-foreground">{member.role}</p>
+                    </div>
+                ))}
+              </div>
+          ) : (
+             <p className="text-muted-foreground">Team members will be displayed here.</p>
+          )}
         </div>
       </div>
     </section>
   );
 }
+
+    

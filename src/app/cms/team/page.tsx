@@ -6,9 +6,16 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import TeamView from "./team-view";
 
+type TeamMember = { 
+  id: string; 
+  name: string; 
+  role: string;
+  image_url: string | null;
+  created_at: string;
+};
+
 export default async function TeamPage() {
-  // Supabase is removed, returning empty data
-  const { data: initialMembers, error } = { data: [], error: null };
+  const { data: initialMembers, error } = await getTeamMembers();
 
   if (error) {
     return (
@@ -16,11 +23,13 @@ export default async function TeamPage() {
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Error Loading Data</AlertTitle>
         <AlertDescription>
-          Could not load team members. There might be a problem with your database connection or security policies.
+          Could not load team members: {error.message}
         </AlertDescription>
       </Alert>
     );
   }
 
-  return <TeamView initialMembers={initialMembers || []} />;
+  return <TeamView initialMembers={(initialMembers as TeamMember[]) || []} />;
 }
+
+    
