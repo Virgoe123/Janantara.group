@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useActionState, useEffect, useState, useTransition, useCallback } from "react";
 import { useFormStatus } from "react-dom";
 import { addTeamMember, getTeamMembers, deleteTeamMember, LoginState } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
@@ -70,7 +70,7 @@ function AddTeamMemberForm({ onMemberAdded }: { onMemberAdded: () => void }) {
       setFormKey(Date.now().toString());
       onMemberAdded();
     }
-  }, [state.success, state.message, onMemberAdded, toast]);
+  }, [state, onMemberAdded, toast]);
 
   return (
     <Card>
@@ -195,14 +195,14 @@ export default function TeamView({ initialMembers }: { initialMembers: TeamMembe
   const [members, setMembers] = useState<TeamMember[]>(initialMembers);
   const { toast } = useToast();
 
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async () => {
     const memberResult = await getTeamMembers();
     if(memberResult.error) {
       toast({variant: "destructive", title: "Error", description: "Could not refresh team members."})
     } else {
       setMembers(memberResult.data || []);
     }
-  };
+  }, [toast]);
 
   return (
     <div className="grid gap-8">

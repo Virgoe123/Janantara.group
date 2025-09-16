@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useActionState, useEffect, useState, useTransition, useCallback } from "react";
 import { useFormStatus } from "react-dom";
 import { addClient, getClients, deleteClient, LoginState } from "@/lib/actions";
 import {
@@ -63,7 +63,7 @@ function AddClientForm({ onClientAdded }: { onClientAdded: () => void }) {
         setFormKey(Date.now().toString());
         onClientAdded();
       }
-    }, [state.success, state.message, toast, onClientAdded]);
+    }, [state, onClientAdded, toast]);
 
     return (
          <Card>
@@ -177,7 +177,7 @@ export default function ClientsPage() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     const clientsResult = await getClients();
     if (clientsResult.error) {
       setError("Failed to load clients.");
@@ -185,11 +185,11 @@ export default function ClientsPage() {
     } else {
       setClients(clientsResult.data || []);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchClients();
-  }, []);
+  }, [fetchClients]);
 
   if (error) {
     return (

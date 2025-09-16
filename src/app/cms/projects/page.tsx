@@ -1,8 +1,8 @@
 
 'use client'
 
-import { useActionState, useEffect, useState, useTransition } from "react";
-import { useFormStatus } from "react-dom";
+import { useEffect, useState, useTransition, useCallback } from "react";
+import { useFormStatus, useActionState } from "react-dom";
 import Image from "next/image";
 import { addProject, getClients, getProjects, deleteProject, LoginState } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
@@ -85,7 +85,7 @@ function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProj
       setFormKey(Date.now().toString());
       onProjectAdded();
     }
-  }, [state.success, state.message, toast, onProjectAdded]);
+  }, [state, onProjectAdded, toast]);
 
   return (
     <Card>
@@ -241,44 +241,28 @@ function ProjectsList({ projects, onProjectDeleted }: { projects: Project[], onP
   )
 }
 
-export default function ProjectsPage() {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [error, setError] = useState<string | null>(null);
+function ProjectsView({ initialClients, initialProjects }: { initialClients: Client[], initialProjects: Project[] }) {
+  const [clients, setClients] = useState<Client[]>(initialClients);
+  const [projects, setProjects] = useState<Project[]>(initialProjects);
   const { toast } = useToast();
 
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     const clientResult = await getClients();
-    if(clientResult.error) {
-      setError("Failed to load clients.");
-      toast({variant: "destructive", title: "Error", description: "Could not load clients."})
+    if (clientResult.error) {
+      toast({ variant: "destructive", title: "Error", description: "Could not refresh clients." });
     } else {
       setClients(clientResult.data || []);
     }
-  };
+  }, [toast]);
 
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     const projectResult = await getProjects();
-    if(projectResult.error) {
-      setError("Failed to load projects.");
-      toast({variant: "destructive", title: "Error", description: "Could not load projects."})
+    if (projectResult.error) {
+      toast({ variant: "destructive", title: "Error", description: "Could not refresh projects." });
     } else {
       setProjects(projectResult.data as any || []);
     }
-  };
-
-  useEffect(() => {
-    fetchClients();
-    fetchProjects();
-  }, []);
-
-  if(error) {
-    return <Alert variant="destructive">
-      <AlertCircle className="h-4 w-4" />
-      <AlertTitle>Error</AlertTitle>
-      <AlertDescription>{error}</AlertDescription>
-    </Alert>
-  }
+  }, [toast]);
   
   return (
     <div className="grid gap-8">
@@ -294,4 +278,25 @@ export default function ProjectsPage() {
       </Card>
     </div>
   );
+}
+
+export default async function ProjectsPage() {
+  const clientsResult = await getClients();
+  const projectsResult = await getProjects();
+
+  const error = clientsResult.error || projectsResult.error;
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error Loading Data</AlertTitle>
+        <AlertDescription>
+          {`Could not load required data: ${error.message}`}
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
+  return <ProjectsView initialClients={clientsResult.data || []} initialProjects={projectsResult.data as any || []} />;
 }

@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useActionState, useEffect, useState, useTransition, useCallback } from "react";
 import { useFormStatus } from "react-dom";
 import { addService, getServices, deleteService, LoginState } from "@/lib/actions";
 import {
@@ -82,7 +82,7 @@ function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
         setFormKey(Date.now().toString());
         onServiceAdded();
       }
-    }, [state.success, state.message, onServiceAdded, toast]);
+    }, [state, onServiceAdded, toast]);
 
     return (
          <Card>
@@ -205,7 +205,7 @@ export default function ServicesPage() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchServices = async () => {
+  const fetchServices = useCallback(async () => {
     const servicesResult = await getServices();
     if (servicesResult.error) {
       setError("Failed to load services.");
@@ -213,11 +213,11 @@ export default function ServicesPage() {
     } else {
       setServices(servicesResult.data || []);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchServices();
-  }, []);
+  }, [fetchServices]);
 
   if (error) {
     return (
