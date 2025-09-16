@@ -160,4 +160,50 @@ body {
     z-index: -1;
   }
 
+  /* Green wave button */
+  .wave-button-green {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    transition: color 0.4s ease-in-out;
+    color: hsl(var(--primary-foreground));
+    background-color: hsl(var(--primary));
+  }
+  
+  .wave-button-green:hover {
+    color: hsl(var(--primary-foreground));
+  }
+  
+  .wave-button-green:hover .wave-top,
+  .wave-button-green:hover .wave-bottom {
+    transform: translateY(0);
+  }
+
+  .wave-button-green .wave-top {
+    background: hsl(var(--primary));
+    transform: translateY(100%);
+  }
+  .wave-button-green .wave-bottom {
+    background: hsl(var(--primary));
+    transform: translateY(-100%);
+  }
+  .wave-button-green:hover .wave-top {
+    background: hsl(var(--background));
+  }
+  .wave-button-green:hover .wave-bottom {
+    background: hsl(var(--background));
+  }
+  .wave-button-green {
+    background-color: hsl(var(--background));
+    color: hsl(var(--primary));
+    border: 1px solid hsl(var(--primary));
+  }
+  .wave-button-green:hover {
+    color: hsl(var(--primary-foreground));
+  }
+  .wave-button-green .wave-top, .wave-button-green .wave-bottom {
+    background: hsl(var(--primary));
+  }
+
+
 }
