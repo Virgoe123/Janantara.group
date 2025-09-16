@@ -1,3 +1,52 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "project-1",
+      "description": "First project image",
+      "imageUrl": "https://picsum.photos/seed/p1/600/400",
+      "imageHint": "tech business"
+    },
+    {
+      "id": "project-2",
+      "description": "Second project image",
+      "imageUrl": "https://picsum.photos/seed/p2/600/400",
+      "imageHint": "corporate office"
+    },
+    {
+      "id": "project-3",
+      "description": "Third project image",
+      "imageUrl": "https://picsum.photos/seed/p3/600/400",
+      "imageHint": "modern design"
+    },
+    {
+      "id": "project-4",
+      "description": "Fourth project image",
+      "imageUrl": "https://picsum.photos/seed/p4/600/400",
+      "imageHint": "abstract code"
+    },
+    {
+      "id": "team-1",
+      "description": "First team member",
+      "imageUrl": "https://picsum.photos/seed/t1/100/100",
+      "imageHint": "professional portrait"
+    },
+    {
+      "id": "team-2",
+      "description": "Second team member",
+      "imageUrl": "https://picsum.photos/seed/t2/100/100",
+      "imageHint": "person smiling"
+    },
+    {
+      "id": "team-3",
+      "description": "Third team member",
+      "imageUrl": "https://picsum.photos/seed/t3/100/100",
+      "imageHint": "woman developer"
+    },
+    {
+      "id": "team-4",
+      "description": "Fourth team member",
+      "imageUrl": "https://picsum.photos/seed/t4/100/100",
+      "imageHint": "man office"
+    }
+  ]
 }
