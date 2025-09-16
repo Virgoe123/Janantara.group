@@ -214,13 +214,9 @@ export async function getProjects() {
 }
 
 // Service Actions
-const iconNames = Object.keys(LucideIcons) as (keyof typeof LucideIcons)[];
 const ServiceSchema = z.object({
   title: z.string().min(2, "Title is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  icon: z.string().refine((val) => iconNames.includes(val as any), {
-    message: "Invalid icon name. Must be a valid Lucide-React icon name.",
-  }),
 });
 
 export async function addService(prevState: LoginState, formData: FormData): Promise<LoginState> {
@@ -230,7 +226,6 @@ export async function addService(prevState: LoginState, formData: FormData): Pro
     const validatedFields = ServiceSchema.safeParse({
         title: formData.get('title'),
         description: formData.get('description'),
-        icon: formData.get('icon'),
     });
 
     if (!validatedFields.success) {

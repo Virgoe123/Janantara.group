@@ -1,24 +1,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import * as LucideIcons from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
-
-type IconName = keyof typeof LucideIcons;
 
 type Service = {
     id: number;
     title: string;
     description: string;
-    icon: string;
-};
-
-const Icon = ({ name, className }: { name: IconName; className?: string }) => {
-  const LucideIcon = LucideIcons[name] as React.ElementType;
-  if (!LucideIcon) {
-    return <LucideIcons.HelpCircle className={className} />;
-  }
-  return <LucideIcon className={className} />;
 };
 
 export async function Services() {
@@ -42,8 +30,7 @@ export async function Services() {
             <div className="mx-auto grid max-w-5xl items-start gap-8 py-12 sm:grid-cols-2 md:gap-12 lg:max-w-none lg:grid-cols-3">
             {services.map((service: Service) => (
                 <Card key={service.id} className="text-left h-full flex flex-col">
-                  <CardHeader>
-                      <Icon name={service.icon as IconName} className="h-8 w-8 text-foreground mb-4" />
+                  <CardHeader className="pt-8">
                       <CardTitle>{service.title}</CardTitle>
                   </CardHeader>
                   <CardContent className="flex-grow">

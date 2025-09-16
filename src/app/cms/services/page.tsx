@@ -39,26 +39,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Trash2 } from "lucide-react";
-import * as LucideIcons from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Combobox } from "@/components/ui/combobox";
-
-
-type IconName = keyof typeof LucideIcons;
 
 type Service = {
   id: string;
   title: string;
   description: string;
-  icon: string;
-};
-
-const Icon = ({ name, className }: { name: IconName; className?: string }) => {
-  const LucideIcon = LucideIcons[name] as React.ElementType;
-  if (!LucideIcon) {
-    return <LucideIcons.HelpCircle className={className} />;
-  }
-  return <LucideIcon className={className} />;
 };
 
 
@@ -70,10 +56,6 @@ function SubmitButton() {
         </Button>
     )
 }
-
-const iconNames = Object.keys(LucideIcons).filter(
-  (key) => typeof LucideIcons[key as keyof typeof LucideIcons] !== "function"
-);
 
 function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
     const { toast } = useToast();
@@ -93,10 +75,6 @@ function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
         onServiceAdded();
       }
     }, [isSubmitSuccessful, result, onServiceAdded, toast, reset]);
-    
-    const iconOptions = Object.keys(LucideIcons)
-        .filter(key => key !== 'createLucideIcon' && key !== 'LucideProvider')
-        .map(key => ({ value: key, label: key }));
 
     return (
          <Card>
@@ -117,17 +95,6 @@ function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
                     <Label htmlFor="description">Description</Label>
                     <Textarea id="description" name="description" placeholder="Describe the service..." required />
                     {result?.errors?.description && <p className="text-sm text-destructive">{result.errors.description[0]}</p>}
-                </div>
-                <div className="space-y-2">
-                    <Label>Icon</Label>
-                    <Combobox
-                        name="icon"
-                        options={iconOptions}
-                        placeholder="Select an icon..."
-                        searchPlaceholder="Search icons..."
-                        notFoundText="No icons found."
-                     />
-                     {result?.errors?.icon && <p className="text-sm text-destructive">{result.errors.icon[0]}</p>}
                 </div>
                  {result?.message && !result.success && (
                     <Alert variant="destructive">
@@ -171,7 +138,6 @@ function ServiceList({ services, onServiceDeleted, isLoading }: { services: Serv
             <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[50px]">Icon</TableHead>
                     <TableHead>Title</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -180,7 +146,6 @@ function ServiceList({ services, onServiceDeleted, isLoading }: { services: Serv
                 <TableBody>
                     {[...Array(3)].map((_, i) => (
                         <TableRow key={i}>
-                            <TableCell><Skeleton className="h-5 w-5" /></TableCell>
                             <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                             <TableCell><Skeleton className="h-5 w-full" /></TableCell>
                             <TableCell className="text-right"><Skeleton className="h-8 w-8 inline-block" /></TableCell>
@@ -201,7 +166,6 @@ function ServiceList({ services, onServiceDeleted, isLoading }: { services: Serv
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[50px]">Icon</TableHead>
             <TableHead>Title</TableHead>
             <TableHead>Description</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -210,9 +174,6 @@ function ServiceList({ services, onServiceDeleted, isLoading }: { services: Serv
         <TableBody>
           {services.map((service) => (
             <TableRow key={service.id} className={isDeleting === service.id ? 'opacity-50' : ''}>
-              <TableCell>
-                  <Icon name={service.icon as IconName} className="h-5 w-5" />
-              </TableCell>
               <TableCell className="font-medium">{service.title}</TableCell>
               <TableCell>{service.description}</TableCell>
               <TableCell className="text-right">
