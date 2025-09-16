@@ -19,7 +19,7 @@ const ProjectCard = ({ project, index }: { project: Project; index: number }) =>
   const props = project.link ? { href: project.link, target: "_blank", rel: "noopener noreferrer" } : {};
   
   // Base styles
-  let baseStyles = "relative shrink-0 w-[300px] h-[400px] md:w-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 ease-in-out";
+  let baseStyles = "relative shrink-0 w-[400px] h-[300px] md:w-[500px] md:h-[350px] rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 ease-in-out";
   // Perspective styles based on index
   let perspectiveStyles = "";
   if (index === 0) perspectiveStyles = "md:rotate-y-15";
@@ -124,3 +124,4 @@ export async function Projects() {
 //     })
 //   })
 // ],
+
