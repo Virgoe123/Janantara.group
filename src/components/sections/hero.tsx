@@ -6,7 +6,7 @@ import { ArrowRight, ArrowDown } from "lucide-react";
 
 export function Hero() {
   return (
-    <section id="home" className="relative w-full h-screen min-h-[700px] flex flex-col justify-center overflow-hidden bg-[#11793A] text-white">
+    <section id="home" className="relative w-full h-screen min-h-[700px] flex items-center justify-center overflow-hidden bg-[#11793A] text-white">
       <div className="absolute inset-0 vertical-lines opacity-20" />
       
       <div className="relative container mx-auto px-4 md:px-6 z-10">
