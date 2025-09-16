@@ -1,7 +1,8 @@
 
 'use client'
 
-import { useEffect, useState, useTransition, useCallback, useActionState } from "react";
+import { useEffect, useState, useTransition, useCallback } from "react";
+import { useForm, useFormState } from "react-hook-form";
 import { useFormStatus } from "react-dom";
 import { addClient, getClients, deleteClient, LoginState } from "@/lib/actions";
 import {
@@ -51,23 +52,23 @@ function SubmitButton() {
 
 function AddClientForm({ onClientAdded }: { onClientAdded: () => void }) {
     const { toast } = useToast();
-    const initialState: LoginState = { message: null, errors: {}, success: false };
-    const [state, formAction] = useActionState(addClient, initialState);
     const [formKey, setFormKey] = useState(Date.now().toString());
+    
+    const { control, reset, formState: { isSubmitSuccessful } } = useForm();
+    const { isSubmitting, errors, result } = useFormState({ control });
 
     useEffect(() => {
-      if (state.success) {
-        if(state.message) {
-            toast({
-              title: "Success!",
-              description: state.message,
-            });
+        if (isSubmitSuccessful && result?.success) {
+            if(result.message) {
+                toast({
+                  title: "Success!",
+                  description: result.message,
+                });
+            }
+            reset(); 
+            onClientAdded();
         }
-        // Reset the form by changing the key
-        setFormKey(Date.now().toString()); 
-        onClientAdded();
-      }
-    }, [state, onClientAdded, toast]);
+    }, [isSubmitSuccessful, result, onClientAdded, toast, reset]);
 
     return (
          <Card>
@@ -77,31 +78,34 @@ function AddClientForm({ onClientAdded }: { onClientAdded: () => void }) {
                 Enter the name of the new client to add them to your list.
             </CardDescription>
             </CardHeader>
-            <form action={formAction} key={formKey}>
-            <CardContent className="space-y-4">
-                <div className="space-y-2">
-                <Label htmlFor="name">Client Name</Label>
-                <Input
-                    id="name"
-                    name="name"
-                    placeholder="e.g., Innovate Inc."
-                    required
-                />
-                {state?.errors?.name && <p className="text-sm text-destructive">{state.errors.name[0]}</p>}
-                </div>
-                 {state?.message && !state.success && (
-                    <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Action Failed</AlertTitle>
-                        <AlertDescription>
-                        {state.message}
-                        </AlertDescription>
-                    </Alert>
-                )}
-            </CardContent>
-            <CardFooter>
-                <SubmitButton />
-            </CardFooter>
+            <form action={addClient}>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="name">Client Name</Label>
+                        <Input
+                            id="name"
+                            name="name"
+                            placeholder="e.g., Innovate Inc."
+                            required
+                        />
+                        {errors.name && <p className="text-sm text-destructive">{errors.name.message as string}</p>}
+                        {result?.errors?.name && <p className="text-sm text-destructive">{result.errors.name[0]}</p>}
+                    </div>
+                    {result?.message && !result.success && (
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle>Action Failed</AlertTitle>
+                            <AlertDescription>
+                            {result.message}
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                </CardContent>
+                <CardFooter>
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? "Adding..." : "Add Client"}
+                    </Button>
+                </CardFooter>
             </form>
         </Card>
     )
@@ -249,5 +253,3 @@ export default function ClientsPage() {
     </div>
   );
 }
-
-    

@@ -1,10 +1,10 @@
 
 'use client'
 
-import { useState, useTransition, useCallback, useEffect, useActionState } from "react";
-import { useFormStatus } from "react-dom";
+import { useState, useCallback, useEffect } from "react";
+import { useForm, useFormState } from "react-hook-form";
 import Image from "next/image";
-import { getClients, getProjects, deleteProject, LoginState, addProject } from "@/lib/actions";
+import { getClients, getProjects, deleteProject, addProject } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -61,33 +61,23 @@ type Project = {
   clients: { name: string } | null;
 };
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" disabled={pending}>
-      {pending ? "Adding Project..." : "Add Project"}
-    </Button>
-  );
-}
-
 function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProjectAdded: () => void }) {
   const { toast } = useToast();
-  const initialState: LoginState = { message: null, errors: {}, success: false };
-  const [state, formAction] = useActionState(addProject, initialState);
-  const [formKey, setFormKey] = useState(Date.now().toString());
+  const { control, reset, formState: { isSubmitSuccessful } } = useForm();
+  const { isSubmitting, errors, result } = useFormState({ control });
 
   useEffect(() => {
-    if (state.success) {
-      if (state.message) {
+    if (isSubmitSuccessful && result?.success) {
+      if (result.message) {
         toast({
           title: "Success!",
-          description: state.message,
+          description: result.message,
         });
       }
-      setFormKey(Date.now().toString());
+      reset();
       onProjectAdded();
     }
-  }, [state, onProjectAdded, toast]);
+  }, [isSubmitSuccessful, result, onProjectAdded, toast, reset]);
 
   return (
     <Card>
@@ -97,17 +87,17 @@ function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProj
           Fill out the details below to add a new project to your portfolio.
         </CardDescription>
       </CardHeader>
-      <form action={formAction} key={formKey}>
+      <form action={addProject}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Project Title</Label>
             <Input id="title" name="title" placeholder="e.g., Awesome Mobile App" required />
-            {state?.errors?.title && <p className="text-sm text-destructive">{state.errors.title[0]}</p>}
+            {result?.errors?.title && <p className="text-sm text-destructive">{result.errors.title[0]}</p>}
           </div>
            <div className="space-y-2">
             <Label htmlFor="link">Project Link (Optional)</Label>
             <Input id="link" name="link" placeholder="https://example.com" />
-            {state?.errors?.link && <p className="text-sm text-destructive">{state.errors.link[0]}</p>}
+            {result?.errors?.link && <p className="text-sm text-destructive">{result.errors.link[0]}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="clientId">Client (Optional)</Label>
@@ -124,28 +114,30 @@ function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProj
                 ))}
               </SelectContent>
             </Select>
-            {state?.errors?.clientId && <p className="text-sm text-destructive">{state.errors.clientId[0]}</p>}
+            {result?.errors?.clientId && <p className="text-sm text-destructive">{result.errors.clientId[0]}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Description (Optional)</Label>
             <Textarea id="description" name="description" placeholder="A short description of the project."/>
-             {state?.errors?.description && <p className="text-sm text-destructive">{state.errors.description[0]}</p>}
+             {result?.errors?.description && <p className="text-sm text-destructive">{result.errors.description[0]}</p>}
           </div>
            <div className="space-y-2">
             <Label htmlFor="image">Project Image</Label>
             <Input id="image" name="image" type="file" required accept="image/*"/>
-            {state?.errors?.image && <p className="text-sm text-destructive">{state.errors.image[0]}</p>}
+            {result?.errors?.image && <p className="text-sm text-destructive">{result.errors.image[0]}</p>}
           </div>
-           {state?.message && !state.success && (
+           {result?.message && !result.success && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Action Failed</AlertTitle>
-                <AlertDescription>{state.message}</AlertDescription>
+                <AlertDescription>{result.message}</AlertDescription>
               </Alert>
             )}
         </CardContent>
         <CardFooter>
-          <SubmitButton />
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Adding Project..." : "Add Project"}
+          </Button>
         </CardFooter>
       </form>
     </Card>

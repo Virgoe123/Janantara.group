@@ -1,7 +1,8 @@
 
 'use client'
 
-import { useEffect, useState, useCallback, useActionState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useForm, useFormState } from "react-hook-form";
 import { useFormStatus } from "react-dom";
 import { addService, getServices, deleteService, LoginState } from "@/lib/actions";
 import {
@@ -76,22 +77,22 @@ const iconNames = Object.keys(LucideIcons).filter(
 
 function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
     const { toast } = useToast();
-    const initialState: LoginState = { message: null, errors: {}, success: false };
-    const [state, formAction] = useActionState(addService, initialState);
-    const [formKey, setFormKey] = useState(Date.now().toString());
+    const { control, reset, formState: { isSubmitSuccessful } } = useForm();
+    const { isSubmitting, errors, result } = useFormState({ control });
+
 
     useEffect(() => {
-      if (state.success) {
-        if(state.message) {
+      if (isSubmitSuccessful && result?.success) {
+        if(result.message) {
             toast({
               title: "Success!",
-              description: state.message,
+              description: result.message,
             });
         }
-        setFormKey(Date.now().toString());
+        reset();
         onServiceAdded();
       }
-    }, [state, onServiceAdded, toast]);
+    }, [isSubmitSuccessful, result, onServiceAdded, toast, reset]);
     
     const iconOptions = Object.keys(LucideIcons)
         .filter(key => key !== 'createLucideIcon' && key !== 'LucideProvider')
@@ -105,17 +106,17 @@ function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
                 Fill out the details for the new service.
             </CardDescription>
             </CardHeader>
-            <form action={formAction} key={formKey}>
+            <form action={addService}>
             <CardContent className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="title">Service Title</Label>
                     <Input id="title" name="title" placeholder="e.g., Web Development" required />
-                    {state?.errors?.title && <p className="text-sm text-destructive">{state.errors.title[0]}</p>}
+                    {result?.errors?.title && <p className="text-sm text-destructive">{result.errors.title[0]}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="description">Description</Label>
                     <Textarea id="description" name="description" placeholder="Describe the service..." required />
-                    {state?.errors?.description && <p className="text-sm text-destructive">{state.errors.description[0]}</p>}
+                    {result?.errors?.description && <p className="text-sm text-destructive">{result.errors.description[0]}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label>Icon</Label>
@@ -126,20 +127,22 @@ function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
                         searchPlaceholder="Search icons..."
                         notFoundText="No icons found."
                      />
-                     {state?.errors?.icon && <p className="text-sm text-destructive">{state.errors.icon[0]}</p>}
+                     {result?.errors?.icon && <p className="text-sm text-destructive">{result.errors.icon[0]}</p>}
                 </div>
-                 {state?.message && !state.success && (
+                 {result?.message && !result.success && (
                     <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Action Failed</AlertTitle>
                         <AlertDescription>
-                        {state.message}
+                        {result.message}
                         </AlertDescription>
                     </Alert>
                 )}
             </CardContent>
             <CardFooter>
-                <SubmitButton />
+                 <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Adding Service..." : "Add Service"}
+                 </Button>
             </CardFooter>
             </form>
         </Card>
