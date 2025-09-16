@@ -64,6 +64,7 @@ CREATE POLICY "Authenticated users can update team members." ON team_members FOR
 CREATE POLICY "Authenticated users can delete team members." ON team_members FOR DELETE USING (auth.role() = 'authenticated');
 
 -- Create storage bucket for images
+-- Ensure the buckets are created with public access if needed, or manage access via policies.
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('project_images', 'project_images', true)
 ON CONFLICT (id) DO NOTHING;
@@ -72,13 +73,33 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('team_images', 'team_images', true)
 ON CONFLICT (id) DO NOTHING;
 
--- Create policies for storage
-CREATE POLICY "Project images are publicly accessible." ON storage.objects FOR SELECT USING (bucket_id = 'project_images');
-CREATE POLICY "Authenticated users can upload project images." ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'project_images' AND auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can update project images." ON storage.objects FOR UPDATE WITH CHECK (bucket_id = 'project_images' AND auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can delete project images." ON storage.objects FOR DELETE USING (bucket_id = 'project_images' AND auth.role() = 'authenticated');
 
-CREATE POLICY "Team images are publicly accessible." ON storage.objects FOR SELECT USING (bucket_id = 'team_images');
-CREATE POLICY "Authenticated users can upload team images." ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'team_images' AND auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can update team images." ON storage.objects FOR UPDATE WITH CHECK (bucket_id = 'team_images' AND auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can delete team images." ON storage.objects FOR DELETE USING (bucket_id = 'team_images' AND auth.role() = 'authenticated');
+-- Create policies for storage
+-- These policies allow public read access, and allow authenticated users to manage their own files.
+
+-- Policies for 'project_images' bucket
+CREATE POLICY "Project images are publicly viewable." ON storage.objects
+  FOR SELECT USING (bucket_id = 'project_images');
+
+CREATE POLICY "Authenticated users can upload to project_images." ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id = 'project_images' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can update their own project images." ON storage.objects
+  FOR UPDATE USING (bucket_id = 'project_images' AND auth.role() = 'authenticated');
+  
+CREATE POLICY "Authenticated users can delete their own project images." ON storage.objects
+  FOR DELETE USING (bucket_id = 'project_images' AND auth.role() = 'authenticated');
+
+
+-- Policies for 'team_images' bucket
+CREATE POLICY "Team images are publicly viewable." ON storage.objects
+  FOR SELECT USING (bucket_id = 'team_images');
+
+CREATE POLICY "Authenticated users can upload to team_images." ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id = 'team_images' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can update their own team images." ON storage.objects
+  FOR UPDATE USING (bucket_id = 'team_images' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can delete their own team images." ON storage.objects
+  FOR DELETE USING (bucket_id = 'team_images' AND auth.role() = 'authenticated');
