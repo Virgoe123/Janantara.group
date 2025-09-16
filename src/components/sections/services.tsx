@@ -41,14 +41,14 @@ export async function Services() {
         {services && services.length > 0 ? (
             <div className="mx-auto grid max-w-5xl items-start gap-8 py-12 sm:grid-cols-2 md:gap-12 lg:max-w-none lg:grid-cols-3">
             {services.map((service: Service) => (
-                <Card key={service.id} className="text-center">
-                <CardHeader className="items-center">
-                    <Icon name={service.icon as IconName} className="h-10 w-10 text-primary" />
-                    <CardTitle>{service.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground">{service.description}</p>
-                </CardContent>
+                <Card key={service.id} className="text-left h-full flex flex-col">
+                  <CardHeader>
+                      <Icon name={service.icon as IconName} className="h-8 w-8 text-foreground mb-4" />
+                      <CardTitle>{service.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex-grow">
+                      <p className="text-muted-foreground">{service.description}</p>
+                  </CardContent>
                 </Card>
             ))}
             </div>
