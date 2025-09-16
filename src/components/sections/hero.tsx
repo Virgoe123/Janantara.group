@@ -2,8 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowRight, ArrowDown } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import HeroProjectCarousel from "./hero-project-carousel";
@@ -67,3 +66,4 @@ export async function Hero() {
     </section>
   );
 }
+

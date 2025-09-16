@@ -91,15 +91,15 @@
   .wave-button-green::before {
     content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 100%;
-    height: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background-color: #F9F4F0;
-    border-radius: 50%;
+    border-radius: inherit;
     z-index: -1;
-    transform: translate(-50%, -50%) scale(0);
-    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: scale(0);
+    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .wave-button-green:hover {
@@ -107,14 +107,12 @@
   }
   
   .wave-button-green:hover::before {
-    transform: translate(-50%, -50%) scale(1.5);
-    border-radius: 0;
+    transform: scale(1);
   }
 
   .wave-button-green:hover + .chat-bubble-button::after,
-  .wave-button-green:hover::after {
+  .wave-button-green:hover.chat-bubble-button::after {
     border-top-color: #F9F4F0;
-    transition: border-color 0.4s ease-in-out;
   }
 
 
