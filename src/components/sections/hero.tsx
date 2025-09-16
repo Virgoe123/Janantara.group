@@ -26,7 +26,7 @@ export async function Hero() {
     <section id="home" className="relative w-full h-screen min-h-[700px] flex flex-col items-center justify-center overflow-hidden bg-[#11793A] text-white">
       <div className="absolute inset-0 vertical-lines opacity-20" />
       
-      <div className="relative container mx-auto px-4 md:px-6 z-10 flex-1 flex flex-col items-center justify-center">
+      <div className="relative container mx-auto px-4 md:px-6 z-10 flex-1 flex flex-col items-center justify-center pb-32">
         <div className="flex flex-col items-center space-y-6 text-center">
           <Badge variant="outline" className="bg-white/10 border-white/30 text-white py-1 px-3">
              <span className="relative flex h-2 w-2 mr-2">
