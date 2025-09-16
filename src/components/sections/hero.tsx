@@ -22,7 +22,7 @@ export function Hero() {
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-white font-headline leading-tight" style={{color: '#F9F4F0'}}>
               DESIGN.DEVELOP.<br/>DELIVER.
             </h1>
-            <p className="mx-auto max-w-[700px] text-white/80 md:text-xl/relaxed">
+            <p className="mx-auto max-w-[700px] text-[#F9F4F0]/80 md:text-xl/relaxed">
               We are a software house crafting future-proof digital solutions custom-built to elevate your brand, drive growth, and adapt seamlessly to your business goals.
             </p>
           </div>
