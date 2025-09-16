@@ -1,116 +1,98 @@
 -- Create clients table
-CREATE TABLE IF NOT EXISTS clients (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at timestamp WITH time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
-  name text NOT NULL
-);
-
--- Enable RLS for clients table
-ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
-
--- Policy for public read access
-DROP POLICY IF EXISTS "Allow public read access to clients" ON clients;
-CREATE POLICY "Allow public read access to clients" ON clients FOR SELECT USING (true);
-
--- Policy for authenticated users to manage clients
-DROP POLICY IF EXISTS "Allow authenticated users to manage clients" ON clients;
-CREATE POLICY "Allow authenticated users to manage clients" ON clients FOR ALL USING (auth.role() = 'authenticated');
-
+create table
+  public.clients (
+    id uuid not null default gen_random_uuid (),
+    created_at timestamp with time zone not null default now(),
+    name character varying not null,
+    constraint clients_pkey primary key (id)
+  ) tablespace pg_default;
+  
 -- Create projects table
-CREATE TABLE IF NOT EXISTS projects (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at timestamp WITH time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
-  title text NOT NULL,
-  description text,
-  image_url text,
-  link text,
-  client_id uuid REFERENCES clients(id) ON DELETE SET NULL
-);
-
--- Enable RLS for projects table
-ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
-
--- Policy for public read access
-DROP POLICY IF EXISTS "Allow public read access to projects" ON projects;
-CREATE POLICY "Allow public read access to projects" ON projects FOR SELECT USING (true);
-
--- Policy for authenticated users to manage projects
-DROP POLICY IF EXISTS "Allow authenticated users to manage projects" ON projects;
-CREATE POLICY "Allow authenticated users to manage projects" ON projects FOR ALL USING (auth.role() = 'authenticated');
-
+create table
+  public.projects (
+    id uuid not null default gen_random_uuid (),
+    created_at timestamp with time zone not null default now(),
+    title character varying not null,
+    description text null,
+    image_url character varying null,
+    client_id uuid null,
+    link text null,
+    constraint projects_pkey primary key (id),
+    constraint projects_client_id_fkey foreign key (client_id) references clients (id) on delete set null
+  ) tablespace pg_default;
+  
 -- Create services table
-CREATE TABLE IF NOT EXISTS services (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
-  title text NOT NULL,
-  description text NOT NULL,
-  icon text NOT NULL
-);
-
--- Enable RLS for services table
-ALTER TABLE services ENABLE ROW LEVEL SECURITY;
-
--- Policy for public read access
-DROP POLICY IF EXISTS "Allow public read access to services" ON services;
-CREATE POLICY "Allow public read access to services" ON services FOR SELECT USING (true);
-
--- Policy for authenticated users to manage services
-DROP POLICY IF EXISTS "Allow authenticated users to manage services" ON services;
-CREATE POLICY "Allow authenticated users to manage services" ON services FOR ALL USING (auth.role() = 'authenticated');
-
+create table
+  public.services (
+    id uuid not null default gen_random_uuid (),
+    created_at timestamp with time zone not null default now(),
+    title character varying not null,
+    description text not null,
+    icon character varying not null,
+    constraint services_pkey primary key (id)
+  ) tablespace pg_default;
+  
 -- Create team_members table
-CREATE TABLE IF NOT EXISTS team_members (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
-  name text NOT NULL,
-  role text NOT NULL,
-  image_url text
-);
+create table
+  public.team_members (
+    id uuid not null default gen_random_uuid (),
+    created_at timestamp with time zone not null default now(),
+    name character varying not null,
+    role character varying not null,
+    image_url character varying null,
+    constraint team_members_pkey primary key (id)
+  ) tablespace pg_default;
+  
+-- Create Storage buckets
+insert into storage.buckets (id, name, public)
+values ('project_images', 'project_images', true);
 
--- Enable RLS for team_members table
-ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
+insert into storage.buckets (id, name, public)
+values ('team_images', 'team_images', true);
 
--- Policy for public read access
-DROP POLICY IF EXISTS "Allow public read access to team members" ON team_members;
-CREATE POLICY "Allow public read access to team members" ON team_members FOR SELECT USING (true);
+-- RLS Policies for Storage
+create policy "Allow public read access to project images"
+on storage.objects for select
+using ( bucket_id = 'project_images' );
 
--- Policy for authenticated users to manage team members
-DROP POLICY IF EXISTS "Allow authenticated users to manage team members" ON team_members;
-CREATE POLICY "Allow authenticated users to manage team members" ON team_members FOR ALL USING (auth.role() = 'authenticated');
+create policy "Allow authenticated users to upload project images"
+on storage.objects for insert to authenticated
+with check ( bucket_id = 'project_images' );
 
+create policy "Allow public read access to team images"
+on storage.objects for select
+using ( bucket_id = 'team_images' );
 
--- Create Storage bucket for project images if it doesn't exist
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('project_images', 'project_images', true)
-ON CONFLICT (id) DO NOTHING;
+create policy "Allow authenticated users to upload team images"
+on storage.objects for insert to authenticated
+with check ( bucket_id = 'team_images' );
 
--- Policies for project_images bucket
-DROP POLICY IF EXISTS "Allow public read access to project images" ON storage.objects;
-CREATE POLICY "Allow public read access to project images" ON storage.objects FOR SELECT USING (bucket_id = 'project_images');
+-- Enable RLS for all tables
+alter table public.clients enable row level security;
+alter table public.projects enable row level security;
+alter table public.services enable row level security;
+alter table public.team_members enable row level security;
 
-DROP POLICY IF EXISTS "Allow authenticated users to upload project images" ON storage.objects;
-CREATE POLICY "Allow authenticated users to upload project images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'project_images' AND auth.role() = 'authenticated');
+-- Policies for 'clients' table
+create policy "Allow public read-only access" on public.clients
+for select using (true);
+create policy "Allow full access for authenticated users" on public.clients
+for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
-DROP POLICY IF EXISTS "Allow authenticated users to update project images" ON storage.objects;
-CREATE POLICY "Allow authenticated users to update project images" ON storage.objects FOR UPDATE WITH CHECK (bucket_id = 'project_images' AND auth.role() = 'authenticated');
+-- Policies for 'projects' table
+create policy "Allow public read-only access" on public.projects
+for select using (true);
+create policy "Allow full access for authenticated users" on public.projects
+for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
-DROP POLICY IF EXISTS "Allow authenticated users to delete project images" ON storage.objects;
-CREATE POLICY "Allow authenticated users to delete project images" ON storage.objects FOR DELETE USING (bucket_id = 'project_images' AND auth.role() = 'authenticated');
+-- Policies for 'services' table
+create policy "Allow public read-only access" on public.services
+for select using (true);
+create policy "Allow full access for authenticated users" on public.services
+for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
--- Create Storage bucket for team images if it doesn't exist
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('team_images', 'team_images', true)
-ON CONFLICT (id) DO NOTHING;
-
--- Policies for team_images bucket
-DROP POLICY IF EXISTS "Allow public read access to team images" ON storage.objects;
-CREATE POLICY "Allow public read access to team images" ON storage.objects FOR SELECT USING (bucket_id = 'team_images');
-
-DROP POLICY IF EXISTS "Allow authenticated users to upload team images" ON storage.objects;
-CREATE POLICY "Allow authenticated users to upload team images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'team_images' AND auth.role() = 'authenticated');
-
-DROP POLICY IF EXISTS "Allow authenticated users to update team images" ON storage.objects;
-CREATE POLICY "Allow authenticated users to update team images" ON storage.objects FOR UPDATE WITH CHECK (bucket_id = 'team_images' AND auth.role() = 'authenticated');
-
-DROP POLICY IF EXISTS "Allow authenticated users to delete team images" ON storage.objects;
-CREATE POLICY "Allow authenticated users to delete team images" ON storage.objects FOR DELETE USING (bucket_id = 'team_images' AND auth.role() = 'authenticated');
+-- Policies for 'team_members' table
+create policy "Allow public read-only access" on public.team_members
+for select using (true);
+create policy "Allow full access for authenticated users" on public.team_members
+for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
