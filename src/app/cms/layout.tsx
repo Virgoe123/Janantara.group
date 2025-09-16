@@ -14,11 +14,12 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-import { LayoutDashboard, LogOut, Settings } from "lucide-react";
+import { LayoutDashboard, LogOut, Settings, Home } from "lucide-react";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/lib/actions";
+import { Separator } from "@/components/ui/separator";
 
 const LogoutButton = () => {
   return (
@@ -73,6 +74,18 @@ export default async function CmsLayout({
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
+           <Separator className="my-2" />
+           <SidebarMenu>
+             <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/">
+                    <Home />
+                    Back to Site
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+           </SidebarMenu>
+           <Separator className="my-2" />
           <LogoutButton />
         </SidebarFooter>
       </Sidebar>
