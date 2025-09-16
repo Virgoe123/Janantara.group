@@ -39,6 +39,14 @@ const NavLinks = ({
       HOME
     </Link>
     <Link
+      href="/#about"
+      className={cn("text-sm font-medium transition-colors", scrolled ? "text-muted-foreground hover:text-foreground" : "text-[#F9F4F0]/80 hover:text-[#F9F4F0]")}
+      onClick={onLinkClick}
+      prefetch={false}
+    >
+      ABOUT
+    </Link>
+    <Link
       href="/#services"
       className={cn("text-sm font-medium transition-colors", scrolled ? "text-muted-foreground hover:text-foreground" : "text-[#F9F4F0]/80 hover:text-[#F9F4F0]")}
       onClick={onLinkClick}
@@ -53,14 +61,6 @@ const NavLinks = ({
       prefetch={false}
     >
       PROJECTS
-    </Link>
-    <Link
-      href="/#about"
-      className={cn("text-sm font-medium transition-colors", scrolled ? "text-muted-foreground hover:text-foreground" : "text-[#F9F4F0]/80 hover:text-[#F9F4F0]")}
-      onClick={onLinkClick}
-      prefetch={false}
-    >
-      ABOUT
     </Link>
     <Link
       href="/#testimonials"
