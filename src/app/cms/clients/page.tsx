@@ -1,9 +1,9 @@
 
 'use client'
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
-import { addClient, getClients, LoginState } from "@/lib/actions";
+import { addClient, getClients, deleteClient, LoginState } from "@/lib/actions";
 import {
   Card,
   CardContent,
@@ -23,10 +23,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Trash2 } from "lucide-react";
 
 function SubmitButton() {
     const { pending } = useFormStatus();
@@ -49,7 +60,6 @@ function AddClientForm({ onClientAdded }: { onClientAdded: () => void }) {
           title: "Success!",
           description: state.message,
         });
-        // By changing the key, we force React to re-mount the form, thus clearing it.
         setFormKey(Date.now().toString());
         onClientAdded();
       }
@@ -93,7 +103,22 @@ function AddClientForm({ onClientAdded }: { onClientAdded: () => void }) {
     )
 }
 
-function ClientList({ clients }: { clients: {id: string, name: string, created_at: string}[] }) {
+function ClientList({ clients, onClientDeleted }: { clients: {id: string, name: string, created_at: string}[], onClientDeleted: () => void }) {
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
+
+  const handleDelete = (id: string) => {
+    startTransition(async () => {
+      const result = await deleteClient(id);
+      if (result.success) {
+        toast({ title: "Success", description: result.message });
+        onClientDeleted();
+      } else {
+        toast({ variant: "destructive", title: "Error", description: result.message });
+      }
+    });
+  };
+
   if (!clients || clients.length === 0) {
     return <p className="text-center text-muted-foreground">No clients found. Add one above to get started.</p>;
   }
@@ -105,6 +130,7 @@ function ClientList({ clients }: { clients: {id: string, name: string, created_a
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Created</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -112,6 +138,32 @@ function ClientList({ clients }: { clients: {id: string, name: string, created_a
             <TableRow key={client.id}>
               <TableCell className="font-medium">{client.name}</TableCell>
               <TableCell>{formatDistanceToNow(new Date(client.created_at), { addSuffix: true })}</TableCell>
+              <TableCell className="text-right">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" disabled={isPending}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the client "{client.name}".
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDelete(client.id)}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -159,7 +211,7 @@ export default function ClientsPage() {
             <CardDescription>A list of all your clients.</CardDescription>
         </CardHeader>
         <CardContent>
-           <ClientList clients={clients} />
+           <ClientList clients={clients} onClientDeleted={fetchClients}/>
         </CardContent>
       </Card>
     </div>

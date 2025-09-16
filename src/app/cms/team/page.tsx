@@ -1,10 +1,10 @@
 
 'use client'
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import Image from "next/image";
-import { addTeamMember, getTeamMembers, LoginState } from "@/lib/actions";
+import { addTeamMember, getTeamMembers, deleteTeamMember, LoginState } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,6 +14,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -26,7 +37,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type TeamMember = { 
@@ -103,7 +114,22 @@ function AddTeamMemberForm({ onMemberAdded }: { onMemberAdded: () => void }) {
   );
 }
 
-function TeamList({ members }: { members: TeamMember[] }) {
+function TeamList({ members, onMemberDeleted }: { members: TeamMember[], onMemberDeleted: () => void }) {
+   const [isPending, startTransition] = useTransition();
+   const { toast } = useToast();
+ 
+   const handleDelete = (id: string, imageUrl: string | null) => {
+     startTransition(async () => {
+       const result = await deleteTeamMember(id, imageUrl || '');
+       if (result.success) {
+         toast({ title: "Success", description: result.message });
+         onMemberDeleted();
+       } else {
+         toast({ variant: "destructive", title: "Error", description: result.message });
+       }
+     });
+   };
+
    if (members.length === 0) {
     return <p className="text-center text-muted-foreground">No team members found. Add one above to get started.</p>;
   }
@@ -116,6 +142,7 @@ function TeamList({ members }: { members: TeamMember[] }) {
             <TableHead className="w-[80px]">Photo</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Role</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -131,6 +158,32 @@ function TeamList({ members }: { members: TeamMember[] }) {
               </TableCell>
               <TableCell className="font-medium">{member.name}</TableCell>
               <TableCell>{member.role}</TableCell>
+              <TableCell className="text-right">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" disabled={isPending}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the team member "{member.name}".
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDelete(member.id, member.image_url)}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -175,7 +228,7 @@ export default function TeamPage() {
           <CardDescription>A list of all team members.</CardDescription>
         </CardHeader>
         <CardContent>
-          <TeamList members={members}/>
+          <TeamList members={members} onMemberDeleted={fetchMembers}/>
         </CardContent>
       </Card>
     </div>

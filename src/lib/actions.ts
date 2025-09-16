@@ -102,8 +102,20 @@ export async function addClient(prevState: LoginState, formData: FormData) {
   }
 
   revalidatePath('/cms/clients');
-  // Return a success state or redirect if you prefer form.reset() on client
   return { message: `Added client ${validatedFields.data.name}.` };
+}
+
+export async function deleteClient(id: string) {
+  const supabase = createClient();
+  const { error } = await supabase.from('clients').delete().match({ id });
+
+  if (error) {
+    console.error('Delete Client Error:', error);
+    return { success: false, message: 'Database Error: Failed to delete client.' };
+  }
+
+  revalidatePath('/cms/clients');
+  return { success: true, message: 'Client deleted successfully.' };
 }
 
 
@@ -186,6 +198,34 @@ export async function addProject(prevState: LoginState, formData: FormData) {
     return { message: `Successfully added project "${title}".` };
 }
 
+export async function deleteProject(id: string, imageUrl: string) {
+  const supabase = createClient();
+
+  // 1. Delete image from storage
+  if (imageUrl) {
+    const fileName = imageUrl.split('/').pop();
+    if (fileName) {
+      const { error: storageError } = await supabase.storage.from('project_images').remove([fileName]);
+      if (storageError) {
+        console.error('Storage Delete Error:', storageError);
+        return { success: false, message: 'Failed to delete project image.' };
+      }
+    }
+  }
+
+  // 2. Delete project from database
+  const { error: dbError } = await supabase.from('projects').delete().match({ id });
+  if (dbError) {
+    console.error('DB Delete Error:', dbError);
+    return { success: false, message: 'Database Error: Failed to delete project.' };
+  }
+
+  revalidatePath('/cms/projects');
+  revalidatePath('/#projects');
+  return { success: true, message: 'Project deleted successfully.' };
+}
+
+
 export async function getProjects() {
   const supabase = createClient();
   const { data, error } = await supabase
@@ -240,6 +280,21 @@ export async function addService(prevState: LoginState, formData: FormData) {
   revalidatePath('/#services');
   return { message: `Added service "${title}".` };
 }
+
+export async function deleteService(id: string) {
+  const supabase = createClient();
+  const { error } = await supabase.from('services').delete().match({ id });
+
+  if (error) {
+    console.error('Delete Service Error:', error);
+    return { success: false, message: 'Database Error: Failed to delete service.' };
+  }
+
+  revalidatePath('/cms/services');
+  revalidatePath('/#services');
+  return { success: true, message: 'Service deleted successfully.' };
+}
+
 
 export async function getServices() {
   const supabase = createClient();
@@ -310,6 +365,32 @@ export async function addTeamMember(prevState: LoginState, formData: FormData) {
     revalidatePath('/#about');
     return { message: `Successfully added team member "${name}".` };
 }
+
+export async function deleteTeamMember(id: string, imageUrl: string) {
+  const supabase = createClient();
+
+  if (imageUrl) {
+    const fileName = imageUrl.split('/').pop();
+    if (fileName) {
+      const { error: storageError } = await supabase.storage.from('team_images').remove([fileName]);
+      if (storageError) {
+        console.error('Storage Delete Error:', storageError);
+        return { success: false, message: 'Failed to delete member image.' };
+      }
+    }
+  }
+
+  const { error: dbError } = await supabase.from('team_members').delete().match({ id });
+  if (dbError) {
+    console.error('DB Delete Error:', dbError);
+    return { success: false, message: 'Database Error: Failed to delete team member.' };
+  }
+
+  revalidatePath('/cms/team');
+  revalidatePath('/#about');
+  return { success: true, message: 'Team member deleted successfully.' };
+}
+
 
 export async function getTeamMembers() {
   const supabase = createClient();

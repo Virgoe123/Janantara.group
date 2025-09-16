@@ -1,9 +1,9 @@
 
 'use client'
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
-import { addService, getServices, LoginState } from "@/lib/actions";
+import { addService, getServices, deleteService, LoginState } from "@/lib/actions";
 import {
   Card,
   CardContent,
@@ -23,10 +23,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Wrench } from "lucide-react";
+import { AlertCircle, Trash2 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 
 type IconName = keyof typeof LucideIcons;
@@ -116,7 +127,22 @@ function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
     )
 }
 
-function ServiceList({ services }: { services: Service[] }) {
+function ServiceList({ services, onServiceDeleted }: { services: Service[], onServiceDeleted: () => void }) {
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
+
+  const handleDelete = (id: string) => {
+    startTransition(async () => {
+      const result = await deleteService(id);
+      if (result.success) {
+        toast({ title: "Success", description: result.message });
+        onServiceDeleted();
+      } else {
+        toast({ variant: "destructive", title: "Error", description: result.message });
+      }
+    });
+  };
+
   if (!services || services.length === 0) {
     return <p className="text-center text-muted-foreground">No services found. Add one above to get started.</p>;
   }
@@ -129,6 +155,7 @@ function ServiceList({ services }: { services: Service[] }) {
             <TableHead className="w-[50px]">Icon</TableHead>
             <TableHead>Title</TableHead>
             <TableHead>Description</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -139,6 +166,32 @@ function ServiceList({ services }: { services: Service[] }) {
               </TableCell>
               <TableCell className="font-medium">{service.title}</TableCell>
               <TableCell>{service.description}</TableCell>
+              <TableCell className="text-right">
+                 <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" disabled={isPending}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the service "{service.title}".
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDelete(service.id)}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -186,7 +239,7 @@ export default function ServicesPage() {
             <CardDescription>A list of all your offered services.</CardDescription>
         </CardHeader>
         <CardContent>
-           <ServiceList services={services} />
+           <ServiceList services={services} onServiceDeleted={fetchServices}/>
         </CardContent>
       </Card>
     </div>
