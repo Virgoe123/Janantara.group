@@ -1,25 +1,34 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Codepen, Smartphone, PenTool } from "lucide-react";
+import { getServices } from "@/lib/actions";
+import * as LucideIcons from "lucide-react";
 
-const services = [
-  {
-    icon: <Codepen className="h-10 w-10 text-primary" />,
-    title: "Web Development",
-    description: "Building responsive, high-performance websites and web applications tailored to your business needs.",
-  },
-  {
-    icon: <Smartphone className="h-10 w-10 text-primary" />,
-    title: "Mobile Apps",
-    description: "Creating intuitive and engaging mobile experiences for iOS and Android platforms.",
-  },
-  {
-    icon: <PenTool className="h-10 w-10 text-primary" />,
-    title: "UI/UX Design",
-    description: "Designing beautiful, user-centric interfaces that are both functional and delightful to use.",
-  },
-];
+type IconName = keyof typeof LucideIcons;
 
-export function Services() {
+const Icon = ({ name, className }: { name: IconName; className?: string }) => {
+  const LucideIcon = LucideIcons[name] as React.ElementType;
+  if (!LucideIcon) {
+    return <LucideIcons.AlertCircle className={className} />;
+  }
+  return <LucideIcon className={className} />;
+};
+
+export async function Services() {
+  const { data: services, error } = await getServices();
+
+  if (error || !services || services.length === 0) {
+    return (
+      <section id="services" className="w-full py-12 md:py-24 lg:py-32 bg-secondary">
+        <div className="container mx-auto px-4 md:px-6 text-center">
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Our Services</h2>
+          <p className="mt-4 max-w-[900px] mx-auto text-muted-foreground md:text-xl/relaxed">
+            We are currently defining our service offerings. Please check back soon!
+          </p>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section id="services" className="w-full py-12 md:py-24 lg:py-32 bg-secondary">
       <div className="container mx-auto px-4 md:px-6">
@@ -33,9 +42,9 @@ export function Services() {
         </div>
         <div className="mx-auto grid max-w-5xl items-start gap-8 py-12 sm:grid-cols-2 md:gap-12 lg:max-w-none lg:grid-cols-3">
           {services.map((service) => (
-            <Card key={service.title} className="text-center">
+            <Card key={service.id} className="text-center">
               <CardHeader className="items-center">
-                {service.icon}
+                <Icon name={service.icon as IconName} className="h-10 w-10 text-primary" />
                 <CardTitle>{service.title}</CardTitle>
               </CardHeader>
               <CardContent>

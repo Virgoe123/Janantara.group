@@ -1,61 +1,87 @@
-
--- Enable RLS
-alter table "public"."clients" enable row level security;
-
--- Create Policy
-create policy "Allow logged-in users to view clients"
-on "public"."clients"
-as permissive
-for select
-to authenticated
-using (true);
-
-create policy "Allow logged-in users to insert clients"
-on "public"."clients"
-as permissive
-for insert
-to authenticated
-with check (true);
-
--- Projects Table
-create table if not exists "public"."projects" (
-    "id" uuid not null default gen_random_uuid(),
-    "created_at" timestamp with time zone not null default now(),
-    "title" text not null,
-    "description" text,
-    "image_url" text,
-    "client_id" uuid,
-    "link" text,
-    constraint "projects_pkey" primary key (id),
-    constraint "projects_client_id_fkey" foreign key (client_id) references clients (id) on delete set null
+-- Create clients table
+CREATE TABLE IF NOT EXISTS clients (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Enable RLS for Projects
-alter table "public"."projects" enable row level security;
+-- RLS for clients table
+ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 
--- Policies for Projects
-create policy "Allow logged-in users to view projects"
-on "public"."projects"
-as permissive
-for select
-to authenticated
-using (true);
+DROP POLICY IF EXISTS "Allow all access to authenticated users" ON clients;
+CREATE POLICY "Allow all access to authenticated users"
+ON clients
+FOR ALL
+USING (auth.role() = 'authenticated')
+WITH CHECK (auth.role() = 'authenticated');
 
-create policy "Allow logged-in users to insert projects"
-on "public"."projects"
-as permissive
-for insert
-to authenticated
-with check (true);
+-- Create projects table
+CREATE TABLE IF NOT EXISTS projects (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT,
+  image_url TEXT,
+  link TEXT,
+  client_id UUID REFERENCES clients(id),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
 
--- Create Storage Bucket for Project Images
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('project_images', 'project_images', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
-on conflict (id) do nothing;
+-- RLS for projects table
+ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 
--- Policies for Storage Bucket
-create policy "Allow logged-in users to upload images"
-on storage.objects for insert to authenticated with check ( bucket_id = 'project_images' );
+DROP POLICY IF EXISTS "Allow public read access" ON projects;
+CREATE POLICY "Allow public read access"
+ON projects
+FOR SELECT
+USING (true);
 
-create policy "Allow anyone to view images"
-on storage.objects for select using ( bucket_id = 'project_images' );
+DROP POLICY IF EXISTS "Allow all access to authenticated users" ON projects;
+CREATE POLICY "Allow all access to authenticated users"
+ON projects
+FOR ALL
+USING (auth.role() = 'authenticated')
+WITH CHECK (auth.role() = 'authenticated');
+
+
+-- Create Storage bucket for project images
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('project_images', 'project_images', true, 2097152, ARRAY['image/jpeg', 'image/png', 'image/gif'])
+ON CONFLICT (id) DO NOTHING;
+
+-- RLS for project_images bucket
+DROP POLICY IF EXISTS "Allow public read access on project_images" ON storage.objects;
+CREATE POLICY "Allow public read access on project_images"
+ON storage.objects
+FOR SELECT
+USING (bucket_id = 'project_images');
+
+DROP POLICY IF EXISTS "Allow insert for authenticated users on project_images" ON storage.objects;
+CREATE POLICY "Allow insert for authenticated users on project_images"
+ON storage.objects
+FOR INSERT
+WITH CHECK (auth.role() = 'authenticated' AND bucket_id = 'project_images');
+
+-- Create services table
+CREATE TABLE IF NOT EXISTS services (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  icon TEXT NOT NULL, -- To store the name of the lucide icon
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS for services table
+ALTER TABLE services ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read access" ON services;
+CREATE POLICY "Allow public read access"
+ON services
+FOR SELECT
+USING (true);
+
+DROP POLICY IF EXISTS "Allow all access to authenticated users" ON services;
+CREATE POLICY "Allow all access to authenticated users"
+ON services
+FOR ALL
+USING (auth.role() = 'authenticated')
+WITH CHECK (auth.role() = 'authenticated');

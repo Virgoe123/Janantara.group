@@ -199,3 +199,54 @@ export async function getProjects() {
 
   return { data, error };
 }
+
+// Service Actions
+const ServiceSchema = z.object({
+  title: z.string().min(2, "Title must be at least 2 characters."),
+  description: z.string().min(10, "Description must be at least 10 characters."),
+  icon: z.string().min(2, "Icon name is required."),
+});
+
+export async function addService(prevState: LoginState, formData: FormData) {
+  const supabase = createClient();
+
+  const validatedFields = ServiceSchema.safeParse({
+    title: formData.get('title'),
+    description: formData.get('description'),
+    icon: formData.get('icon'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Failed to add service.',
+    };
+  }
+
+  const { title, description, icon } = validatedFields.data;
+
+  const { error } = await supabase.from('services').insert({
+    title,
+    description,
+    icon,
+  });
+
+  if (error) {
+    console.error('Supabase error:', error);
+    return { message: 'Database Error: Failed to add service.' };
+  }
+
+  revalidatePath('/cms/services');
+  revalidatePath('/#services');
+  return { message: `Added service "${title}".` };
+}
+
+export async function getServices() {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('services')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  return { data, error };
+}
