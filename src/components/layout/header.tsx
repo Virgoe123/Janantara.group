@@ -107,7 +107,7 @@ const HeaderContent = () => {
         return (
             <header className={cn(
                 "flex h-16 items-center justify-between px-4 md:hidden fixed top-0 z-50 w-full transition-all duration-300",
-                scrolled ? "bg-background shadow-md" : "bg-transparent"
+                scrolled ? "bg-background/80 backdrop-blur-sm shadow-md" : "bg-transparent"
             )}>
               <Logo scrolled={scrolled} />
               <div className="flex items-center gap-2">
@@ -140,7 +140,7 @@ const HeaderContent = () => {
     return (
         <header className={cn(
             "hidden h-20 items-center justify-between px-4 md:flex md:px-8 fixed top-0 z-50 w-full transition-all duration-300",
-            scrolled ? "bg-background shadow-md" : "bg-transparent"
+            scrolled ? "bg-background/80 backdrop-blur-sm shadow-md" : "bg-transparent"
         )}>
             <Logo scrolled={scrolled} />
             <div className="flex items-center gap-6">
