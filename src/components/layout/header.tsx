@@ -7,11 +7,10 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/co
 import { useIsMobile } from "@/hooks/use-mobile";
 import React from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Wind } from "lucide-react";
 
 const Logo = () => (
   <Link href="/" className="flex items-center gap-2" prefetch={false}>
-    <Wind className="h-6 w-6 text-primary" />
+    <Image src="https://res.cloudinary.com/dye07cjmn/image/upload/v1757992101/96b46217-0642-41b8-b06a-0ba5cb0d6572.png" alt="Janantara Logo" width={32} height={32} />
     <span className="text-xl font-bold tracking-tight text-foreground">
       Janantara
     </span>

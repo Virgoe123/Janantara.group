@@ -6,7 +6,7 @@ import { ArrowRight, ArrowDown } from "lucide-react";
 
 export function Hero() {
   return (
-    <section id="home" className="relative w-full h-screen min-h-[700px] flex flex-col justify-center overflow-hidden bg-gradient-to-br from-teal-900 via-green-900 to-emerald-900 text-primary-foreground">
+    <section id="home" className="relative w-full h-screen min-h-[700px] flex flex-col justify-center overflow-hidden bg-gradient-to-br from-emerald-950 via-green-950 to-teal-950 text-primary-foreground">
       <div className="absolute inset-0 vertical-lines opacity-20" />
        <div className="absolute inset-0 bg-background/60 dark:bg-background/20 backdrop-blur-sm" />
 

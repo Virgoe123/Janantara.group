@@ -12,7 +12,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const testimonials = [
   {
-    quote: "Working with Verdant Vista was a game-changer for our business. Their team is professional, skilled, and incredibly responsive. The final product exceeded all our expectations.",
+    quote: "Working with Janantara was a game-changer for our business. Their team is professional, skilled, and incredibly responsive. The final product exceeded all our expectations.",
     name: "Sarah Johnson",
     title: "CEO, Innovate Inc.",
     avatar: "https://picsum.photos/seed/c1/100/100",
