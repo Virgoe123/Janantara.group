@@ -3,13 +3,30 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, ArrowDown } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
+import HeroProjectCarousel from "./hero-project-carousel";
 
-export function Hero() {
+type Project = {
+  id: string;
+  image_url: string | null;
+  title: string;
+};
+
+export async function Hero() {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+  const { data: projects } = await supabase
+    .from('projects')
+    .select('id, title, image_url')
+    .order('created_at', { ascending: false })
+    .limit(10);
+    
   return (
-    <section id="home" className="relative w-full h-screen min-h-[700px] flex items-center justify-center overflow-hidden bg-[#11793A] text-white">
+    <section id="home" className="relative w-full h-screen min-h-[700px] flex flex-col items-center justify-center overflow-hidden bg-[#11793A] text-white">
       <div className="absolute inset-0 vertical-lines opacity-20" />
       
-      <div className="relative container mx-auto px-4 md:px-6 z-10">
+      <div className="relative container mx-auto px-4 md:px-6 z-10 flex-1 flex flex-col items-center justify-center">
         <div className="flex flex-col items-center space-y-6 text-center">
           <Badge variant="outline" className="bg-white/10 border-white/30 text-white py-1 px-3">
              <span className="relative flex h-2 w-2 mr-2">
@@ -40,11 +57,7 @@ export function Hero() {
         <div className="container mx-auto px-4 md:px-6 flex items-center justify-between text-sm font-medium text-white/80">
           <Link href="/#projects" className="hover:text-white">SEE PORTFOLIO</Link>
           
-          <div className="hidden md:flex items-center justify-center gap-4">
-            <Image src="https://picsum.photos/seed/hp1/200/120" width={100} height={60} alt="Portfolio item 1" className="rounded-lg shadow-lg" data-ai-hint="plant" />
-            <Image src="https://picsum.photos/seed/hp2/200/120" width={100} height={60} alt="Portfolio item 2" className="rounded-lg shadow-lg" data-ai-hint="abstract art" />
-            <Image src="https://picsum.photos/seed/hp3/200/120" width={100} height={60} alt="Portfolio item 3" className="rounded-lg shadow-lg" data-ai-hint="geometric shape" />
-          </div>
+          <HeroProjectCarousel projects={projects as Project[] || []} />
 
           <Link href="/#projects" className="flex items-center gap-2 hover:text-white">
             SCROLL DOWN
