@@ -5,6 +5,8 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
 import { LayoutProvider } from '@/components/layout-provider';
+import { Header } from '@/components/layout/header';
+import { Footer } from '@/components/layout/footer';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -32,7 +34,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <LayoutProvider>{children}</LayoutProvider>
+          <LayoutProvider header={<Header />} footer={<Footer />}>
+            {children}
+          </LayoutProvider>
           <Toaster />
         </ThemeProvider>
       </body>

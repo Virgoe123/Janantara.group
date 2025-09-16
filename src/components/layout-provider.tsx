@@ -1,19 +1,25 @@
-
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
+import type { ReactNode } from 'react';
 
-export function LayoutProvider({ children }: { children: React.ReactNode }) {
+export function LayoutProvider({
+  header,
+  footer,
+  children,
+}: {
+  header: ReactNode;
+  footer: ReactNode;
+  children: ReactNode;
+}) {
   const pathname = usePathname();
   const isLoginPage = pathname === '/login' || pathname === '/admin/login';
 
   return (
     <div className="flex min-h-screen flex-col">
-      {!isLoginPage && <Header />}
+      {!isLoginPage && header}
       <main className="flex-1">{children}</main>
-      {!isLoginPage && <Footer />}
+      {!isLoginPage && footer}
     </div>
   );
 }
