@@ -46,8 +46,8 @@ export async function Hero() {
             </div>
             <div className="pt-4">
               <Button size="lg" asChild className="bg-[#F9F4F0] text-[#11793A] hover:bg-[#F9F4F0]/90">
-                <Link href="/#projects" prefetch={false}>
-                  SEE MORE <ArrowRight className="ml-2 h-4 w-4" />
+                <Link href="/#contact" prefetch={false}>
+                  Contact Us
                 </Link>
               </Button>
             </div>

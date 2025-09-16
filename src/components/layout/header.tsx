@@ -66,6 +66,14 @@ const NavLinks = ({
     >
       TESTIMONIALS
     </Link>
+    <Link
+      href="/#contact"
+      className={cn("text-xs font-medium transition-colors", scrolled ? "text-muted-foreground hover:text-foreground" : "text-[#F9F4F0]/80 hover:text-[#F9F4F0]")}
+      onClick={onLinkClick}
+      prefetch={false}
+    >
+      CONTACT
+    </Link>
   </nav>
 );
 
@@ -134,12 +142,7 @@ const HeaderContent = () => {
             scrolled ? "bg-background/80 backdrop-blur-sm shadow-md" : "bg-transparent"
         )}>
             <Logo scrolled={scrolled}/>
-            <div className="absolute left-1/2 -translate-x-1/2">
-                <NavLinks className="flex items-center gap-x-6" scrolled={scrolled}/>
-            </div>
-             <Button size="sm" asChild className={cn(scrolled ? "bg-primary text-primary-foreground" : "bg-[#F9F4F0] text-[#11793A] hover:bg-[#F9F4F0]/90")}>
-                <Link href="/#contact">Contact Us</Link>
-            </Button>
+            <NavLinks className="flex items-center gap-x-6" scrolled={scrolled}/>
         </header>
     );
 };
