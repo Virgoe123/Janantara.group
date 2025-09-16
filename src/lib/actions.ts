@@ -155,7 +155,7 @@ export async function addProject(prevState: LoginState, formData: FormData): Pro
     description: description || null,
     link: link || null,
     image_url: publicUrl,
-    client_id: clientId === '' ? null : clientId
+    client_id: clientId === '' || clientId === 'no-client' ? null : clientId
   };
 
   const { error: dbError } = await supabase.from('projects').insert([projectData]);
@@ -344,5 +344,3 @@ export async function getTeamMembers() {
     const supabase = createClient(cookieStore);
     return supabase.from('team_members').select('*').order('created_at', { ascending: false });
 }
-
-    
