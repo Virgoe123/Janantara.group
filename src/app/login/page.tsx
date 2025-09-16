@@ -49,7 +49,7 @@ export default function LoginPage() {
             {state?.message && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Login Failed</Title>
+                <AlertTitle>Login Failed</AlertTitle>
                 <AlertDescription>
                   {state.message}
                 </AlertDescription>
