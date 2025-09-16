@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import React from "react";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 const Logo = () => (
   <Link href="/" className="flex items-center gap-2" prefetch={false}>
@@ -81,7 +80,6 @@ const DesktopHeader = () => (
     <Logo />
     <div className="flex items-center gap-6">
       <NavLinks className="flex items-center gap-x-6 text-sm" />
-      <ThemeToggle />
     </div>
   </header>
 );
@@ -93,7 +91,6 @@ const MobileHeader = () => {
     <header className="flex h-16 items-center justify-between px-4 md:hidden absolute top-0 z-50 w-full bg-transparent">
       <Logo />
       <div className="flex items-center gap-2">
-        <ThemeToggle />
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon">

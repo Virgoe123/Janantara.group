@@ -14,7 +14,6 @@ import {
 import Link from "next/link";
 import { LayoutDashboard, LogOut, Settings, Home, Users, Briefcase, Wrench, Smile } from "lucide-react";
 import Image from "next/image";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/lib/actions";
 import { Separator } from "@/components/ui/separator";
@@ -127,7 +126,7 @@ export default async function CmsLayout({
         <header className="flex h-14 items-center justify-between border-b bg-background px-4">
            <SidebarTrigger className="md:hidden"/>
            <div className="ml-auto">
-             <ThemeToggle />
+             
            </div>
         </header>
         <div className="p-4">{children}</div>
