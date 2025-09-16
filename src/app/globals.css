@@ -86,3 +86,25 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .subtle-grid-pattern {
+    background-image:
+      linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .dark .subtle-grid-pattern {
+     background-image:
+      linear-gradient(to right, hsl(var(--border) / 0.5) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.5) 1px, transparent 1px);
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+}
