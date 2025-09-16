@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useState, useTransition, useCallback } from "react";
+import { useState, useTransition, useCallback, useEffect } from "react";
 import { useFormStatus, useActionState } from "react-dom";
 import Image from "next/image";
 import { addProject, getClients, getProjects, deleteProject, LoginState } from "@/lib/actions";
@@ -49,7 +49,6 @@ import { AlertCircle, Link as LinkIcon, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { useEffect } from "react";
 
 type Client = { id: string; name: string };
 type Project = { 
@@ -250,8 +249,7 @@ function ProjectsView({ initialClients, initialProjects }: { initialClients: Cli
   const { toast } = useToast();
 
   const fetchClients = useCallback(async () => {
-    const cookieStore = cookies();
-    const clientResult = await getClients(cookieStore);
+    const clientResult = await getClients();
     if (clientResult.error) {
       toast({ variant: "destructive", title: "Error", description: "Could not refresh clients." });
     } else {
@@ -260,8 +258,7 @@ function ProjectsView({ initialClients, initialProjects }: { initialClients: Cli
   }, [toast]);
 
   const fetchProjects = useCallback(async () => {
-    const cookieStore = cookies();
-    const projectResult = await getProjects(cookieStore);
+    const projectResult = await getProjects();
     if (projectResult.error) {
       toast({ variant: "destructive", title: "Error", description: "Could not refresh projects." });
     } else {
