@@ -18,7 +18,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
-  const initialState: LoginState = { message: null, errors: {} };
+  const initialState: LoginState = { message: null };
   const [state, dispatch] = useFormState(authenticate, initialState);
 
   return (
@@ -39,28 +39,18 @@ export default function LoginPage() {
                 placeholder="m@example.com" 
                 required 
               />
-              {state.errors?.email &&
-                <p className="text-sm font-medium text-destructive">
-                  {state.errors.email[0]}
-                </p>
-              }
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input id="password" name="password" type="password" required />
-               {state.errors?.password &&
-                <p className="text-sm font-medium text-destructive">
-                  {state.errors.password[0]}
-                </p>
-              }
             </div>
-            {state.message && (
+            {state?.message && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Login Failed</AlertTitle>
                 <AlertDescription>
                   {state.message}
-                </Aler tDescription>
+                </AlertDescription>
               </Alert>
             )}
           </CardContent>
