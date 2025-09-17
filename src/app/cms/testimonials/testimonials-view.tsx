@@ -181,11 +181,6 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
   const dialogCloseRef = useRef<HTMLButtonElement>(null);
   const initialState: LoginState = { message: null };
   const [state, formAction] = useActionState(updateTestimonial, initialState);
-  const [isPublished, setIsPublished] = useState(testimonial.is_published);
-
-  useEffect(() => {
-    setIsPublished(testimonial.is_published);
-  }, [testimonial.is_published]);
 
   useEffect(() => {
     if (state?.success) {
@@ -215,7 +210,7 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
         <DialogHeader>
           <DialogTitle>Edit Testimonial</DialogTitle>
           <DialogDescription>
-            Update the testimonial details and set its publication status.
+            Update the testimonial details.
           </DialogDescription>
         </DialogHeader>
         <form action={formAction}>
@@ -245,15 +240,6 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
                     {state?.errors?.rating && <p className="text-sm text-destructive">{state.errors.rating[0]}</p>}
                 </div>
             </div>
-             <div className="flex items-center space-x-2 pt-4">
-                <input type="hidden" name="is_published" value={isPublished ? 'on' : 'off'} />
-                <Switch 
-                  id="is_published" 
-                  checked={isPublished}
-                  onCheckedChange={setIsPublished}
-                />
-                <Label htmlFor="is_published">Show on main page</Label>
-             </div>
           </div>
           <DialogFooter>
              <DialogClose asChild ref={dialogCloseRef}>
@@ -439,5 +425,7 @@ export default function TestimonialsView({ initialTestimonials }: { initialTesti
   );
 }
 
+
+    
 
     
