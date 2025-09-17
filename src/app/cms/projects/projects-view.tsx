@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useState, useCallback, useEffect, useActionState, useRef } from "react";
+import { useActionState, useRef, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import Image from "next/image";
 import { getClients, getProjects, deleteProject, addProject, LoginState } from "@/lib/actions";
@@ -84,11 +84,17 @@ function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProj
       });
       formRef.current?.reset();
       onProjectAdded();
+    } else if (state?.message && !state.success) {
+        toast({
+            variant: "destructive",
+            title: "Action Failed",
+            description: state.message,
+        });
     }
   }, [state, onProjectAdded, toast]);
 
   return (
-    <Card>
+    <Card className="shadow-md">
       <CardHeader>
         <CardTitle className="text-xl">Add New Project</CardTitle>
         <CardDescription>
@@ -136,13 +142,6 @@ function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProj
             <Input id="image" name="image" type="file" required accept="image/*" className="file:text-foreground"/>
             {state?.errors?.image && <p className="text-sm text-destructive">{state.errors.image[0]}</p>}
           </div>
-           {state?.message && !state.success && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Action Failed</AlertTitle>
-                <AlertDescription>{state.message}</AlertDescription>
-              </Alert>
-            )}
         </CardContent>
         <CardFooter>
           <SubmitButton />
@@ -153,7 +152,7 @@ function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProj
 }
 
 function ProjectsList({ projects, onProjectDeleted, isLoading }: { projects: Project[], onProjectDeleted: (id:string) => void, isLoading: boolean }) {
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = React.useState<string | null>(null);
   const { toast } = useToast();
 
   const handleDelete = async (id: string, imageUrl: string | null) => {
@@ -170,7 +169,7 @@ function ProjectsList({ projects, onProjectDeleted, isLoading }: { projects: Pro
 
    if (isLoading) {
        return (
-        <Card>
+        <Card className="shadow-md">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -200,11 +199,11 @@ function ProjectsList({ projects, onProjectDeleted, isLoading }: { projects: Pro
    }
 
    if (projects.length === 0) {
-    return <Card className="flex items-center justify-center p-12"><p className="text-center text-muted-foreground">No projects found. Add one to get started.</p></Card>;
+    return <Card className="flex items-center justify-center p-12 shadow-md"><p className="text-center text-muted-foreground">No projects found. Add one to get started.</p></Card>;
   }
 
   return (
-     <Card>
+     <Card className="shadow-md">
       <Table>
         <TableHeader>
           <TableRow>
@@ -275,12 +274,12 @@ function ProjectsList({ projects, onProjectDeleted, isLoading }: { projects: Pro
 }
 
 export default function ProjectsView({ initialClients, initialProjects }: { initialClients: Client[], initialProjects: Project[] }) {
-  const [clients, setClients] = useState<Client[]>(initialClients);
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
-  const [isLoadingProjects, setIsLoadingProjects] = useState(false);
+  const [clients, setClients] = React.useState<Client[]>(initialClients);
+  const [projects, setProjects] = React.useState<Project[]>(initialProjects);
+  const [isLoadingProjects, setIsLoadingProjects] = React.useState(false);
   const { toast } = useToast();
 
-  const fetchClientsAndProjects = useCallback(async () => {
+  const fetchClientsAndProjects = React.useCallback(async () => {
     setIsLoadingProjects(true);
     const [clientResult, projectResult] = await Promise.all([
         getClients(),
@@ -316,3 +315,5 @@ export default function ProjectsView({ initialClients, initialProjects }: { init
     </div>
   );
 }
+
+    
