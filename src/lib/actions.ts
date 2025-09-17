@@ -8,6 +8,8 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import * as LucideIcons from "lucide-react";
 import { suggestServiceIcon } from '@/ai/flows/suggest-service-icon';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
+
 
 export async function submitContactForm(data: { name: string; email: string; message:string }) {
   try {
@@ -286,8 +288,11 @@ const TestimonialSchema = z.object({
 });
 
 export async function addTestimonial(prevState: LoginState, formData: FormData): Promise<LoginState> {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  // Use the service_role key to bypass RLS for public submissions.
+  const supabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const validatedFields = TestimonialSchema.safeParse({
     name: formData.get('name'),
