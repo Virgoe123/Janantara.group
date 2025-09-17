@@ -298,7 +298,11 @@ export async function addTestimonial(prevState: LoginState, formData: FormData):
   });
 
   if (!validatedFields.success) {
-    return { errors: validatedFields.error.flatten().fieldErrors, message: 'Validation failed.', success: false };
+    return { 
+      errors: validatedFields.error.flatten().fieldErrors, 
+      message: 'Validation failed. Please check the form for errors.', 
+      success: false 
+    };
   }
 
   const { name, title, quote, rating, avatar } = validatedFields.data;
@@ -373,5 +377,3 @@ export async function getTestimonials() {
       .select('*')
       .order('created_at', { ascending: false });
 }
-
-    

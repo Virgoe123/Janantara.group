@@ -61,7 +61,7 @@ function StarRating({ rating, onRatingChange, error }: { rating: number; onRatin
 export default function ReviewForm() {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
-  const initialState: LoginState = { message: null };
+  const initialState: LoginState = { message: null, errors: {} };
   const [state, formAction] = useActionState(addTestimonial, initialState);
   const [showSuccess, setShowSuccess] = useState(false);
   const [rating, setRating] = useState(0);
@@ -79,7 +79,7 @@ export default function ReviewForm() {
       toast({
         variant: "destructive",
         title: "Action Failed",
-        description: "Please check the form for errors.",
+        description: state.message,
       });
     }
   }, [state, toast]);
@@ -133,5 +133,3 @@ export default function ReviewForm() {
     </form>
   );
 }
-
-    
