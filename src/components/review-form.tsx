@@ -31,14 +31,8 @@ function SubmitButton() {
   );
 }
 
-function StarRating({ onRatingChange, error }: { onRatingChange: (rating: number) => void; error?: string[] }) {
-  const [rating, setRating] = useState(0);
+function StarRating({ rating, onRatingChange, error }: { rating: number; onRatingChange: (rating: number) => void; error?: string[] }) {
   const [hoverRating, setHoverRating] = useState(0);
-
-  const handleRatingClick = (rate: number) => {
-    setRating(rate);
-    onRatingChange(rate);
-  };
 
   return (
     <div className="space-y-2">
@@ -47,7 +41,7 @@ function StarRating({ onRatingChange, error }: { onRatingChange: (rating: number
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
-            onClick={() => handleRatingClick(star)}
+            onClick={() => onRatingChange(star)}
             onMouseEnter={() => setHoverRating(star)}
             onMouseLeave={() => setHoverRating(0)}
             className={cn(
@@ -70,6 +64,7 @@ export default function ReviewForm() {
   const initialState: LoginState = { message: null };
   const [state, formAction] = useActionState(addTestimonial, initialState);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [rating, setRating] = useState(0);
 
   useEffect(() => {
     if (state?.success) {
@@ -78,6 +73,7 @@ export default function ReviewForm() {
         description: state.message,
       });
       formRef.current?.reset();
+      setRating(0);
       setShowSuccess(true);
     } else if (state?.message && !state.success) {
       toast({
@@ -101,6 +97,7 @@ export default function ReviewForm() {
 
   return (
     <form action={formAction} ref={formRef} className="space-y-6">
+      <input type="hidden" name="rating" value={rating} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="name">Full Name</Label>
@@ -119,14 +116,10 @@ export default function ReviewForm() {
         {state?.errors?.quote && <p className="text-sm text-destructive">{state.errors.quote[0]}</p>}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-        <StarRating onRatingChange={(rating) => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'rating';
-            input.value = String(rating);
-            formRef.current?.appendChild(input);
-        }} 
-        error={state?.errors?.rating}
+        <StarRating 
+            rating={rating}
+            onRatingChange={setRating} 
+            error={state?.errors?.rating}
         />
         <div className="space-y-2">
           <Label htmlFor="avatar">Your Photo (Optional)</Label>
