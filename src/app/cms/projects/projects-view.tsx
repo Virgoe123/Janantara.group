@@ -16,6 +16,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   Dialog,
@@ -153,7 +154,7 @@ function AddProjectForm({ onProjectAdded }: { onProjectAdded: () => void }) {
               <Button type="button" variant="outline" onClick={() => galleryInputRef.current?.click()}>
                   <ImagePlus className="mr-2"/> Add Images
               </Button>
-              {state?.errors?.images && <p className="text-sm text-destructive">{Array.isArray(state.errors.images) ? state.errors.images.join(', '): state.errors.images}</p>}
+              {state?.errors?.images && <p className="text-sm text-destructive">{Array.isArray(state.errors.images) ? state.errors.images.join(', ') : state.errors.images}</p>}
               
               {galleryFiles.length > 0 && (
                 <div className="flex flex-wrap gap-2 p-2 border rounded-md">
