@@ -1,10 +1,9 @@
 
 'use client'
 
-import { useEffect, useState, useCallback } from "react";
-import { useForm, useFormState } from "react-hook-form";
+import { useEffect, useState, useCallback, useActionState, useRef } from "react";
 import { useFormStatus } from "react-dom";
-import { addService, getServices, deleteService } from "@/lib/actions";
+import { addService, getServices, deleteService, LoginState } from "@/lib/actions";
 import {
   Card,
   CardContent,
@@ -49,61 +48,62 @@ type Service = {
   icon: string | null;
 };
 
+function SubmitButton() {
+    const { pending } = useFormStatus();
+    return (
+        <Button type="submit" disabled={pending} className="w-full sm:w-auto">
+            {pending ? "Adding Service..." : "Add Service"}
+        </Button>
+    )
+}
+
+
 function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
     const { toast } = useToast();
-    const { control, reset, formState: { isSubmitSuccessful } } = useForm();
-    const { isSubmitting, errors, result } = useFormState({ control });
-
+    const formRef = useRef<HTMLFormElement>(null);
+    const initialState: LoginState = { message: null };
+    const [state, formAction] = useActionState(addService, initialState);
 
     useEffect(() => {
-      if (isSubmitSuccessful) {
-        if (result?.success) {
-            if(result.message) {
-                toast({
-                  title: "Success!",
-                  description: result.message,
-                });
-            }
-            reset();
-            onServiceAdded();
-        }
+      if (state?.success) {
+          toast({
+            title: "Success!",
+            description: state.message,
+          });
+          formRef.current?.reset();
+          onServiceAdded();
+      } else if (state?.message && !state.success) {
+           toast({
+            variant: "destructive",
+            title: "Action Failed",
+            description: state.message,
+          });
       }
-    }, [isSubmitSuccessful, result, onServiceAdded, toast, reset]);
+    }, [state, onServiceAdded, toast]);
 
     return (
          <Card>
             <CardHeader>
-            <CardTitle>Add New Service</CardTitle>
+            <CardTitle className="text-xl">Add New Service</CardTitle>
             <CardDescription>
-                Fill out the details for the new service. An icon will be automatically generated.
+                Fill out the details for the new service. An icon will be automatically suggested.
             </CardDescription>
             </CardHeader>
-            <form action={addService}>
-            <CardContent className="space-y-4">
+            <form action={formAction} ref={formRef}>
+            <CardContent className="grid gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="title">Service Title</Label>
                     <Input id="title" name="title" placeholder="e.g., Web Development" required />
-                    {result?.errors?.title && <p className="text-sm text-destructive">{result.errors.title[0]}</p>}
+                    {state?.errors?.title && <p className="text-sm text-destructive">{state.errors.title[0]}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="description">Description</Label>
                     <Textarea id="description" name="description" placeholder="Describe the service..." required />
-                    {result?.errors?.description && <p className="text-sm text-destructive">{result.errors.description[0]}</p>}
+                    {state?.errors?.description && <p className="text-sm text-destructive">{state.errors.description[0]}</p>}
                 </div>
-                 {result?.message && !result.success && (
-                    <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Action Failed</AlertTitle>
-                        <AlertDescription>
-                        {result.message}
-                        </AlertDescription>
-                    </Alert>
-                )}
             </CardContent>
             <CardFooter>
-                 <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Adding Service..." : "Add Service"}
-                 </Button>
+                 <SubmitButton />
             </CardFooter>
             </form>
         </Card>
@@ -128,7 +128,7 @@ function ServiceList({ services, onServiceDeleted, isLoading }: { services: Serv
   
   if (isLoading) {
     return (
-        <div className="border rounded-lg">
+        <Card>
             <Table>
                 <TableHeader>
                   <TableRow>
@@ -149,23 +149,23 @@ function ServiceList({ services, onServiceDeleted, isLoading }: { services: Serv
                     ))}
                 </TableBody>
             </Table>
-        </div>
+        </Card>
     )
   }
 
   if (services.length === 0) {
-    return <p className="text-center text-muted-foreground pt-4">No services found. Add one above to get started.</p>;
+    return <Card className="flex items-center justify-center p-12"><p className="text-center text-muted-foreground">No services found. Add one to get started.</p></Card>;
   }
 
   return (
-    <div className="border rounded-lg">
+    <Card>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="w-[50px]">Icon</TableHead>
             <TableHead>Title</TableHead>
             <TableHead>Description</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="text-right w-[100px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -209,7 +209,7 @@ function ServiceList({ services, onServiceDeleted, isLoading }: { services: Serv
           })}
         </TableBody>
       </Table>
-    </div>
+    </Card>
   );
 }
 
@@ -242,18 +242,13 @@ export default function ServicesPage() {
   }
 
   return (
-    <div className="grid gap-8">
-      <AddServiceForm onServiceAdded={handleServiceAdded} />
-      
-      <Card>
-        <CardHeader>
-            <CardTitle>Services</CardTitle>
-            <CardDescription>A list of all your offered services.</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="xl:col-span-1">
+            <AddServiceForm onServiceAdded={handleServiceAdded} />
+        </div>
+        <div className="xl:col-span-2">
            <ServiceList services={services} onServiceDeleted={handleServiceDeleted} isLoading={isLoading}/>
-        </CardContent>
-      </Card>
+        </div>
     </div>
   );
 }

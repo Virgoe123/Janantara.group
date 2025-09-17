@@ -20,13 +20,14 @@ import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 const LogoutButton = () => {
   return (
     <form action={logout} className="w-full">
-      <Button variant="ghost" className="w-full justify-start">
-        <LogOut className="mr-2 h-4 w-4" />
-        Logout
+      <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-destructive">
+        <LogOut className="mr-3 h-5 w-5" />
+        <span>Logout</span>
       </Button>
     </form>
   );
@@ -45,83 +46,64 @@ export default async function CmsLayout({
     redirect('/admin/login');
   }
 
+  const menuItems = [
+    { href: "/cms", icon: <LayoutDashboard />, label: "Dashboard" },
+    { href: "/cms/projects", icon: <Briefcase />, label: "Projects" },
+    { href: "/cms/clients", icon: <Users />, label: "Clients" },
+    { href: "/cms/services", icon: <Wrench />, label: "Services" },
+    { href: "/cms/settings", icon: <Settings />, label: "Settings" },
+  ];
+
   return (
     <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2">
-             <Image src="https://res.cloudinary.com/dye07cjmn/image/upload/v1757992101/96b46217-0642-41b8-b06a-0ba5cb0d6572.png" alt="Janantara Logo" width={32} height={32} />
-             <h2 className="text-lg font-semibold">CMS</h2>
-          </div>
+      <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
+        <SidebarHeader className="h-16 flex items-center justify-center">
+            <Link href="/cms" className={cn(
+                "flex items-center gap-2 transition-all duration-300",
+                "group-data-[state=collapsed]:w-8 group-data-[state=expanded]:w-32"
+            )}>
+                <Image src="https://res.cloudinary.com/dye07cjmn/image/upload/v1757992101/96b46217-0642-41b8-b06a-0ba5cb0d6572.png" alt="Janantara Logo" width={32} height={32} className="shrink-0" />
+                <span className="font-semibold text-lg text-sidebar-foreground group-data-[state=collapsed]:opacity-0 group-data-[state=collapsed]:w-0 transition-opacity duration-200">CMS</span>
+            </Link>
         </SidebarHeader>
         <SidebarContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/cms">
-                  <LayoutDashboard />
-                  Dashboard
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/cms/clients">
-                  <Users />
-                  Clients
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/cms/projects">
-                  <Briefcase />
-                  Projects
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/cms/services">
-                  <Wrench />
-                  Services
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="#">
-                  <Settings />
-                  Settings
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+          <SidebarMenu className="gap-y-2">
+            {menuItems.map((item) => (
+                <SidebarMenuItem key={item.href} className="px-2">
+                <SidebarMenuButton asChild size="lg" tooltip={item.label}>
+                    <Link href={item.href}>
+                        {React.cloneElement(item.icon, { className: "h-5 w-5 shrink-0"})}
+                        <span className="group-data-[state=collapsed]:opacity-0 transition-opacity duration-200">{item.label}</span>
+                    </Link>
+                </SidebarMenuButton>
+                </SidebarMenuItem>
+            ))}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter>
-           <Separator className="my-2" />
+        <SidebarFooter className="p-2">
+           <Separator className="my-2 bg-sidebar-border" />
            <SidebarMenu>
              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton asChild variant="ghost" className="text-muted-foreground" tooltip="Back to Site">
                   <Link href="/">
-                    <Home />
-                    Back to Site
+                    <Home className="h-5 w-5" />
+                     <span className="group-data-[state=collapsed]:opacity-0 transition-opacity duration-200">Back to Site</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
            </SidebarMenu>
-           <Separator className="my-2" />
+           <Separator className="my-2 bg-sidebar-border" />
           <LogoutButton />
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset>
-        <header className="flex h-14 items-center justify-between border-b bg-background px-4">
-           <SidebarTrigger className="md:hidden"/>
+      <SidebarInset className="bg-secondary">
+        <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm">
+           <SidebarTrigger className="md:hidden -ml-2"/>
            <div className="ml-auto">
-             
+             {/* Future user menu */}
            </div>
         </header>
-        <div className="p-4">{children}</div>
+        <div className="p-4 lg:p-8">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

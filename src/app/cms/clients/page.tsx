@@ -1,8 +1,7 @@
 
 'use client'
 
-import { useEffect, useState, useTransition, useCallback } from "react";
-import { useForm, useFormState } from "react-hook-form";
+import { useEffect, useState, useTransition, useCallback, useActionState, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { addClient, getClients, deleteClient, LoginState } from "@/lib/actions";
 import {
@@ -44,42 +43,45 @@ import { Skeleton } from "@/components/ui/skeleton";
 function SubmitButton() {
     const { pending } = useFormStatus();
     return (
-        <Button type="submit" disabled={pending}>
-            {pending ? "Adding..." : "Add Client"}
+        <Button type="submit" disabled={pending} className="w-full sm:w-auto">
+            {pending ? "Adding Client..." : "Add Client"}
         </Button>
     )
 }
 
 function AddClientForm({ onClientAdded }: { onClientAdded: () => void }) {
     const { toast } = useToast();
-    const [formKey, setFormKey] = useState(Date.now().toString());
-    
-    const { control, reset, formState: { isSubmitSuccessful } } = useForm();
-    const { isSubmitting, errors, result } = useFormState({ control });
+    const formRef = useRef<HTMLFormElement>(null);
+    const initialState: LoginState = { message: null };
+    const [state, formAction] = useActionState(addClient, initialState);
 
     useEffect(() => {
-        if (isSubmitSuccessful && result?.success) {
-            if(result.message) {
-                toast({
-                  title: "Success!",
-                  description: result.message,
-                });
-            }
-            reset(); 
+        if (state?.success) {
+            toast({
+              title: "Success!",
+              description: state.message,
+            });
+            formRef.current?.reset();
             onClientAdded();
+        } else if (state?.message && !state.success) {
+            toast({
+              variant: "destructive",
+              title: "Action Failed",
+              description: state.message,
+            });
         }
-    }, [isSubmitSuccessful, result, onClientAdded, toast, reset]);
+    }, [state, onClientAdded, toast]);
 
     return (
-         <Card>
+         <Card className="shadow-md">
             <CardHeader>
-            <CardTitle>Add New Client</CardTitle>
-            <CardDescription>
-                Enter the name of the new client to add them to your list.
-            </CardDescription>
+              <CardTitle className="text-xl">Add New Client</CardTitle>
+              <CardDescription>
+                  Enter the name of the new client to add them to your list.
+              </CardDescription>
             </CardHeader>
-            <form action={addClient}>
-                <CardContent className="space-y-4">
+            <form action={formAction} ref={formRef}>
+                <CardContent>
                     <div className="space-y-2">
                         <Label htmlFor="name">Client Name</Label>
                         <Input
@@ -87,24 +89,13 @@ function AddClientForm({ onClientAdded }: { onClientAdded: () => void }) {
                             name="name"
                             placeholder="e.g., Innovate Inc."
                             required
+                            className="max-w-lg"
                         />
-                        {errors.name && <p className="text-sm text-destructive">{errors.name.message as string}</p>}
-                        {result?.errors?.name && <p className="text-sm text-destructive">{result.errors.name[0]}</p>}
+                        {state?.errors?.name && <p className="text-sm text-destructive">{state.errors.name[0]}</p>}
                     </div>
-                    {result?.message && !result.success && (
-                        <Alert variant="destructive">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertTitle>Action Failed</AlertTitle>
-                            <AlertDescription>
-                            {result.message}
-                            </AlertDescription>
-                        </Alert>
-                    )}
                 </CardContent>
                 <CardFooter>
-                    <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? "Adding..." : "Add Client"}
-                    </Button>
+                    <SubmitButton />
                 </CardFooter>
             </form>
         </Card>
@@ -129,41 +120,41 @@ function ClientList({ clients, onClientDeleted, isLoading }: { clients: {id: str
 
   if (isLoading) {
     return (
-        <div className="border rounded-lg">
-            <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {[...Array(3)].map((_, i) => (
-                        <TableRow key={i}>
-                            <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                            <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                            <TableCell className="text-right"><Skeleton className="h-8 w-8 inline-block" /></TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </div>
+        <Card>
+          <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                  {[...Array(3)].map((_, i) => (
+                      <TableRow key={i}>
+                          <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                          <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                          <TableCell className="text-right"><Skeleton className="h-8 w-8 inline-block" /></TableCell>
+                      </TableRow>
+                  ))}
+              </TableBody>
+          </Table>
+        </Card>
     )
   }
 
   if (clients.length === 0) {
-    return <p className="text-center text-muted-foreground pt-4">No clients found. Add one above to get started.</p>;
+    return <Card className="flex items-center justify-center p-12"><p className="text-center text-muted-foreground">No clients found. Add one to get started.</p></Card>;
   }
 
   return (
-    <div className="border rounded-lg">
+    <Card>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Created</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="text-right w-[100px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -201,7 +192,7 @@ function ClientList({ clients, onClientDeleted, isLoading }: { clients: {id: str
           ))}
         </TableBody>
       </Table>
-    </div>
+    </Card>
   );
 }
 
@@ -227,8 +218,6 @@ export default function ClientsPage() {
 
 
   const handleClientAdded = () => {
-    // No need to setIsLoading(true) here as revalidation will trigger a re-render
-    // But we still need to call it to get the latest data
     fetchClients();
   }
 
@@ -238,18 +227,13 @@ export default function ClientsPage() {
 
 
   return (
-    <div className="grid gap-8">
-      <AddClientForm onClientAdded={handleClientAdded} />
-      
-      <Card>
-        <CardHeader>
-            <CardTitle>Clients</CardTitle>
-            <CardDescription>A list of all your clients.</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-1">
+            <AddClientForm onClientAdded={handleClientAdded} />
+        </div>
+        <div className="lg:col-span-2">
            <ClientList clients={clients} onClientDeleted={handleClientDeleted} isLoading={isLoading}/>
-        </CardContent>
-      </Card>
+        </div>
     </div>
   );
 }
