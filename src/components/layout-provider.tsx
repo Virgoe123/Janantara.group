@@ -1,3 +1,4 @@
+
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -15,12 +16,15 @@ export function LayoutProvider({
   const pathname = usePathname();
   const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/admin/login');
   const isCmsPage = pathname.startsWith('/cms');
+  const isReviewPage = pathname.startsWith('/review');
+
+  const showLayout = !isAuthPage && !isCmsPage && !isReviewPage;
 
   return (
     <div className="flex min-h-screen flex-col">
-      {!isAuthPage && !isCmsPage && header}
+      {showLayout && header}
       <main className="flex-1">{children}</main>
-      {!isAuthPage && !isCmsPage && footer}
+      {showLayout && footer}
     </div>
   );
 }
