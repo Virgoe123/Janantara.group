@@ -11,6 +11,7 @@ export type Testimonial = {
   quote: string;
   rating: number;
   avatar_url: string | null;
+  is_published: boolean;
   created_at: string;
 };
 

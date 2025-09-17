@@ -86,6 +86,7 @@ export function Testimonials() {
         const { data, error } = await supabase
             .from('testimonials')
             .select('*')
+            .eq('is_published', true) // Only fetch published testimonials
             .order('created_at', { ascending: false });
         
         if (error) {
@@ -98,6 +99,37 @@ export function Testimonials() {
     }
     fetchTestimonials();
   }, []);
+
+  if (isLoading) {
+      return (
+        <section id="testimonials" className="w-full py-12 md:py-24 lg:py-32">
+            <div className="container mx-auto px-4 md:px-6">
+                <div className="flex flex-col items-center justify-center space-y-4 text-center">
+                    <div className="space-y-2">
+                        <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">What Our Clients Say</h2>
+                        <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                        We pride ourselves on building strong relationships and delivering results. Here's what our clients have to say about us.
+                        </p>
+                    </div>
+                </div>
+                <Carousel opts={{ align: "start" }} className="w-full max-w-5xl mx-auto py-12">
+                    <CarouselContent className="-ml-4">
+                        {Array.from({ length: 3 }).map((_, index) => (
+                            <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                                <TestimonialSkeleton />
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                </Carousel>
+            </div>
+        </section>
+      )
+  }
+
+  if (testimonials.length === 0) {
+      return null; // Don't render the section if there are no published testimonials
+  }
+
 
   return (
     <section id="testimonials" className="w-full py-12 md:py-24 lg:py-32">
@@ -116,28 +148,16 @@ export function Testimonials() {
         <Carousel
           opts={{
             align: "start",
-            loop: true,
+            loop: testimonials.length > 2,
           }}
           className="w-full max-w-5xl mx-auto py-12"
         >
           <CarouselContent className="-ml-4">
-            {isLoading ? (
-                Array.from({ length: 3 }).map((_, index) => (
-                    <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
-                        <TestimonialSkeleton />
-                    </CarouselItem>
-                ))
-            ) : testimonials && testimonials.length > 0 ? (
-                testimonials.map((testimonial) => (
-                    <CarouselItem key={testimonial.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
-                        <TestimonialCard testimonial={testimonial} />
-                    </CarouselItem>
-                ))
-            ) : (
-                <div className="w-full text-center col-span-full py-12">
-                    <p className="text-muted-foreground">No testimonials have been added yet.</p>
-                </div>
-            )}
+             {testimonials.map((testimonial) => (
+                <CarouselItem key={testimonial.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                    <TestimonialCard testimonial={testimonial} />
+                </CarouselItem>
+            ))}
           </CarouselContent>
           <CarouselPrevious className="hidden sm:flex" />
           <CarouselNext className="hidden sm:flex" />

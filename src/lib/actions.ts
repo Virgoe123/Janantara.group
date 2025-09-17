@@ -303,10 +303,10 @@ export async function addTestimonial(prevState: LoginState, formData: FormData):
   });
 
   if (!validatedFields.success) {
-    return { 
-      errors: validatedFields.error.flatten().fieldErrors, 
-      message: 'Validation failed. Please check the form for errors.', 
-      success: false 
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Validation failed. Please check the form for errors.',
+      success: false,
     };
   }
 
@@ -328,7 +328,14 @@ export async function addTestimonial(prevState: LoginState, formData: FormData):
     avatar_url = publicUrl;
   }
 
-  const testimonialData = { name, title, quote, rating, avatar_url };
+  const testimonialData = { 
+      name, 
+      title, 
+      quote, 
+      rating, 
+      avatar_url,
+      is_published: false // Default to not published
+  };
 
   const { error: dbError } = await supabase.from('testimonials').insert([testimonialData]);
 
@@ -346,6 +353,49 @@ export async function addTestimonial(prevState: LoginState, formData: FormData):
   revalidatePath('/cms/testimonials');
   revalidatePath('/#testimonials');
   return { message: 'Testimonial added successfully.', success: true };
+}
+
+const UpdateTestimonialSchema = z.object({
+  id: z.string(),
+  name: z.string().min(2, "Name is required."),
+  title: z.string().min(2, "Title/company is required."),
+  quote: z.string().min(10, "Quote must be at least 10 characters."),
+  rating: z.coerce.number().int().min(1).max(5),
+  is_published: z.preprocess((val) => val === 'on', z.boolean()),
+});
+
+export async function updateTestimonial(prevState: LoginState, formData: FormData): Promise<LoginState> {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+
+  const validatedFields = UpdateTestimonialSchema.safeParse({
+    id: formData.get('id'),
+    name: formData.get('name'),
+    title: formData.get('title'),
+    quote: formData.get('quote'),
+    rating: formData.get('rating'),
+    is_published: formData.get('is_published'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Validation failed.',
+      success: false,
+    };
+  }
+
+  const { id, ...testimonialData } = validatedFields.data;
+
+  const { error } = await supabase.from('testimonials').update(testimonialData).eq('id', id);
+
+  if (error) {
+    return { message: `Database Error: ${error.message}`, success: false };
+  }
+
+  revalidatePath('/cms/testimonials');
+  revalidatePath('/#testimonials');
+  return { message: 'Testimonial updated successfully.', success: true };
 }
 
 
