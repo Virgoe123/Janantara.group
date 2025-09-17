@@ -19,7 +19,8 @@ const getLink = (key: ContactKey, value: string) => {
         case 'whatsapp':
             return `https://wa.me/${value.replace(/[^0-9]/g, '')}`;
         case 'email':
-            return `mailto:${value}`;
+            // Opens a pre-filled Gmail compose window in a new tab
+            return `https://mail.google.com/mail/?view=cm&fs=1&to=${value}`;
         case 'instagram':
             return `https://instagram.com/${value.replace('@', '')}`;
         default:
@@ -31,7 +32,8 @@ const getLabel = (key: ContactKey, value: string) => {
     if (!value) return 'Not available';
      switch (key) {
         case 'whatsapp':
-            return `+${value}`;
+            // Hide the phone number from the UI
+            return `WhatsApp`;
         case 'email':
             return value;
         case 'instagram':
