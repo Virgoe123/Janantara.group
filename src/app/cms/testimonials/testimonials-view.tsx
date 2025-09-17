@@ -33,7 +33,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -210,7 +216,7 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
         <DialogHeader>
           <DialogTitle>Edit Testimonial</DialogTitle>
           <DialogDescription>
-            Update the testimonial details.
+            Update the testimonial details and publication status.
           </DialogDescription>
         </DialogHeader>
         <form action={formAction}>
@@ -238,6 +244,19 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
                     <Label htmlFor="rating-edit">Rating (1-5)</Label>
                     <Input id="rating-edit" name="rating" type="number" min="1" max="5" defaultValue={testimonial.rating} required />
                     {state?.errors?.rating && <p className="text-sm text-destructive">{state.errors.rating[0]}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="is_published">Status</Label>
+                  <Select name="is_published" defaultValue={String(testimonial.is_published)}>
+                      <SelectTrigger id="is_published">
+                          <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="true">Published</SelectItem>
+                          <SelectItem value="false">Draft</SelectItem>
+                      </SelectContent>
+                  </Select>
+                  {state?.errors?.is_published && <p className="text-sm text-destructive">{state.errors.is_published[0]}</p>}
                 </div>
             </div>
           </div>
@@ -424,8 +443,5 @@ export default function TestimonialsView({ initialTestimonials }: { initialTesti
     </div>
   );
 }
-
-
-    
 
     
