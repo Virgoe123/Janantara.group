@@ -1,4 +1,5 @@
 
+
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import TypingTitle from "./typing-title";
 
 type Project = {
   id: string;
-  image_url: string | null;
+  image_urls: string[] | null;
   title: string;
 };
 
@@ -19,7 +20,7 @@ export async function Hero() {
   const supabase = createClient(cookieStore);
   const { data: projects } = await supabase
     .from('projects')
-    .select('id, title, image_url')
+    .select('id, title, image_urls')
     .order('created_at', { ascending: false })
     .limit(10);
     
@@ -66,4 +67,3 @@ export async function Hero() {
     </section>
   );
 }
-

@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 type Project = {
   id: string;
-  image_url: string | null;
+  image_urls: string[] | null;
   title: string;
 };
 
@@ -15,8 +15,15 @@ export default function HeroProjectCarousel({ projects }: { projects: Project[] 
     return null;
   }
 
+  // Filter projects that have at least one image and flatten them
+  const validProjects = projects.filter(p => p.image_urls && p.image_urls.length > 0);
+  
+  if (validProjects.length === 0) {
+      return null;
+  }
+  
   // Duplicate the projects to create a seamless loop
-  const duplicatedProjects = [...projects, ...projects];
+  const duplicatedProjects = [...validProjects, ...validProjects];
 
   return (
     <div className="hidden md:flex w-full max-w-lg items-center justify-center">
@@ -27,9 +34,9 @@ export default function HeroProjectCarousel({ projects }: { projects: Project[] 
           {duplicatedProjects.map((project, index) => (
             <li key={`${project.id}-${index}`} className="flex-shrink-0">
               <div className="w-40 h-24 relative transform transition-transform duration-500 hover:scale-105">
-                {project.image_url && (
+                {project.image_urls && project.image_urls[0] && (
                   <Image
-                    src={project.image_url}
+                    src={project.image_urls[0]}
                     alt={project.title}
                     fill
                     className="object-cover rounded-lg shadow-lg"
@@ -43,4 +50,3 @@ export default function HeroProjectCarousel({ projects }: { projects: Project[] 
     </div>
   );
 }
-

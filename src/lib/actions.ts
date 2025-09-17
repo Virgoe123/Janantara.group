@@ -112,57 +112,77 @@ export async function getClients() {
 }
 
 // Project Actions
-const ProjectSchema = z.object({
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+const AddProjectSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters."),
   description: z.string().optional(),
   link: z.string().url("Must be a valid URL.").optional().or(z.literal('')),
-  image: z
-    .any()
-    .refine((file) => file?.size > 0, "Project image is required.")
-    .refine((file) => file?.size <= 5000000, `Max file size is 5MB.`)
+  images: z.array(z.any())
+    .refine((files) => files.length > 0, "At least one image is required.")
+    .refine((files) => files.every((file) => file.size <= MAX_FILE_SIZE), `Max file size is 5MB.`)
+    .refine((files) => files.every((file) => ACCEPTED_IMAGE_TYPES.includes(file.type)), "Only .jpg, .jpeg, .png and .webp formats are supported.")
 });
 
 
 export async function addProject(prevState: LoginState, formData: FormData): Promise<LoginState> {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
-  const validatedFields = ProjectSchema.safeParse({
+  const images = formData.getAll('images') as File[];
+  
+  const validatedFields = AddProjectSchema.safeParse({
     title: formData.get('title'),
     description: formData.get('description'),
     link: formData.get('link'),
-    image: formData.get('image'),
+    images: images.filter(f => f.size > 0), // Filter out empty file inputs if any
   });
 
   if (!validatedFields.success) {
     return { errors: validatedFields.error.flatten().fieldErrors, message: 'Validation failed.', success: false };
   }
   
-  const { title, description, link, image } = validatedFields.data;
+  const { title, description, link, images: imageFiles } = validatedFields.data;
 
-  // Upload image
-  const imageFileName = `${Date.now()}-${image.name}`;
-  const { data: imageData, error: imageError } = await supabase.storage
-    .from('project_images')
-    .upload(`${imageFileName}`, image);
+  const imageUrls: string[] = [];
+  
+  for (const image of imageFiles) {
+    const imageFileName = `${Date.now()}-${image.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from('project_images')
+      .upload(imageFileName, image);
 
-  if (imageError) {
-    return { message: `Storage Error: ${imageError.message}`, success: false };
+    if (uploadError) {
+      // Cleanup uploaded files if one fails
+      for (const url of imageUrls) {
+          const fileName = url.split('/').pop()
+          if(fileName) await supabase.storage.from('project_images').remove([fileName]);
+      }
+      return { message: `Storage Error: ${uploadError.message}`, success: false };
+    }
+    
+    const { data: { publicUrl } } = supabase.storage.from('project_images').getPublicUrl(imageFileName);
+    imageUrls.push(publicUrl);
   }
 
-  const { data: { publicUrl } } = supabase.storage.from('project_images').getPublicUrl(`${imageFileName}`);
-  
-  const projectData: any = {
+  const projectData = {
     title,
     description: description || null,
     link: link || null,
-    image_url: publicUrl,
+    image_urls: imageUrls,
   };
 
   const { error: dbError } = await supabase.from('projects').insert([projectData]);
 
   if (dbError) {
-     await supabase.storage.from('project_images').remove([`${imageFileName}`]);
+    // Cleanup storage if db insert fails
+    for (const url of imageUrls) {
+        const fileName = url.split('/').pop()
+        if(fileName) await supabase.storage.from('project_images').remove([fileName]);
+    }
     return { message: `Database Error: ${dbError.message}`, success: false };
   }
 
@@ -171,9 +191,103 @@ export async function addProject(prevState: LoginState, formData: FormData): Pro
   return { message: 'Project added successfully.', success: true };
 }
 
-export async function deleteProject(id: string, imageUrl: string) {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+const UpdateProjectSchema = z.object({
+  id: z.string(),
+  title: z.string().min(2, "Title must be at least 2 characters."),
+  description: z.string().optional(),
+  link: z.string().url("Must be a valid URL.").optional().or(z.literal('')),
+  existing_images: z.string().optional(),
+  new_images: z.array(z.any()).optional()
+    .refine((files) => !files || files.every((file) => file.size <= MAX_FILE_SIZE), `Max file size is 5MB.`)
+    .refine((files) => !files || files.every((file) => ACCEPTED_IMAGE_TYPES.includes(file.type)), "Only .jpg, .jpeg, .png and .webp formats are supported.")
+});
+
+
+export async function updateProject(prevState: LoginState, formData: FormData): Promise<LoginState> {
+    const supabase = createAdminClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    
+    const newImages = formData.getAll('new_images') as File[];
+    const validatedFields = UpdateProjectSchema.safeParse({
+        id: formData.get('id'),
+        title: formData.get('title'),
+        description: formData.get('description'),
+        link: formData.get('link'),
+        existing_images: formData.get('existing_images'),
+        new_images: newImages.filter(f => f.size > 0),
+    });
+
+    if (!validatedFields.success) {
+        return { errors: validatedFields.error.flatten().fieldErrors, message: 'Validation failed.', success: false };
+    }
+
+    const { id, title, description, link, existing_images, new_images } = validatedFields.data;
+
+    let existingImageUrls = existing_images ? existing_images.split(',') : [];
+
+    // Fetch the current project to see which images were removed
+    const { data: currentProject, error: fetchError } = await supabase.from('projects').select('image_urls').eq('id', id).single();
+    if(fetchError) {
+        return { message: 'Failed to fetch current project data.', success: false };
+    }
+
+    const originalImageUrls = currentProject.image_urls || [];
+    const imagesToDelete = originalImageUrls.filter(url => !existingImageUrls.includes(url));
+
+    // Delete images from storage
+    if (imagesToDelete.length > 0) {
+        const fileNamesToDelete = imagesToDelete.map(url => url.split('/').pop()).filter(Boolean) as string[];
+        const { error: storageError } = await supabase.storage.from('project_images').remove(fileNamesToDelete);
+        if (storageError) {
+            console.warn(`Could not delete some images from storage: ${storageError.message}`);
+        }
+    }
+    
+    // Upload new images
+    const newImageUrls: string[] = [];
+    if (new_images && new_images.length > 0) {
+        for (const image of new_images) {
+            const imageFileName = `${Date.now()}-${image.name}`;
+            const { error: uploadError } = await supabase.storage.from('project_images').upload(imageFileName, image);
+
+            if (uploadError) {
+                // Potential cleanup of newly uploaded files if one fails
+                return { message: `Storage Error: ${uploadError.message}`, success: false };
+            }
+            const { data: { publicUrl } } = supabase.storage.from('project_images').getPublicUrl(imageFileName);
+            newImageUrls.push(publicUrl);
+        }
+    }
+
+    const finalImageUrls = [...existingImageUrls, ...newImageUrls];
+
+    const { error: dbError } = await supabase
+        .from('projects')
+        .update({
+            title,
+            description: description || null,
+            link: link || null,
+            image_urls: finalImageUrls,
+        })
+        .eq('id', id);
+
+    if (dbError) {
+        return { message: `Database Error: ${dbError.message}`, success: false };
+    }
+
+    revalidatePath('/cms/projects');
+    revalidatePath('/#projects');
+    return { message: 'Project updated successfully.', success: true };
+}
+
+
+export async function deleteProject(id: string, imageUrls: string[]) {
+  const supabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const { error } = await supabase.from('projects').delete().eq('id', id);
 
@@ -181,12 +295,12 @@ export async function deleteProject(id: string, imageUrl: string) {
     return { success: false, message: `Database Error: ${error.message}` };
   }
 
-  if (imageUrl) {
-    const fileName = imageUrl.split('/').pop();
-    if(fileName) {
-        const { error: storageError } = await supabase.storage.from('project_images').remove([`${fileName}`]);
+  if (imageUrls && imageUrls.length > 0) {
+    const fileNames = imageUrls.map(url => url.split('/').pop()).filter(Boolean) as string[];
+    if (fileNames.length > 0) {
+        const { error: storageError } = await supabase.storage.from('project_images').remove(fileNames);
          if (storageError) {
-            console.warn(`Could not delete image from storage: ${storageError.message}`);
+            console.warn(`Could not delete images from storage: ${storageError.message}`);
          }
     }
   }
@@ -205,7 +319,7 @@ export async function getProjects() {
         id,
         title,
         description,
-        image_url,
+        image_urls,
         link,
         created_at
       `)
@@ -394,12 +508,12 @@ export async function updateTestimonial(prevState: LoginState, formData: FormDat
     };
   }
 
-  const { id, ...dataToUpdate } = validatedFields.data;
+    const { id, ...dataToUpdate } = validatedFields.data;
 
-  const { error } = await supabase
-    .from('testimonials')
-    .update(dataToUpdate)
-    .eq('id', id);
+    const { error } = await supabase
+        .from('testimonials')
+        .update(dataToUpdate)
+        .eq('id', id);
 
   if (error) {
     return { message: `Database Error: ${error.message}`, success: false };

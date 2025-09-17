@@ -1,14 +1,17 @@
 
+
 import { getProjects } from "@/lib/actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import ProjectsView from "./projects-view";
+import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 
-type Project = {
+export type Project = {
   id: string;
   title: string;
   description: string | null;
-  image_url: string | null;
+  image_urls: string[] | null;
   link: string | null;
   created_at: string;
 };
