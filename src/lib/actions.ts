@@ -275,3 +275,101 @@ export async function getServices() {
     const supabase = createClient(cookieStore);
     return supabase.from('services').select('*').order('created_at', { ascending: false });
 }
+
+// Testimonial Actions
+const TestimonialSchema = z.object({
+  name: z.string().min(2, "Name is required."),
+  title: z.string().min(2, "Title/company is required."),
+  quote: z.string().min(10, "Quote must be at least 10 characters."),
+  rating: z.coerce.number().int().min(1).max(5),
+  avatar: z.any().optional(),
+});
+
+export async function addTestimonial(prevState: LoginState, formData: FormData): Promise<LoginState> {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+
+  const validatedFields = TestimonialSchema.safeParse({
+    name: formData.get('name'),
+    title: formData.get('title'),
+    quote: formData.get('quote'),
+    rating: formData.get('rating'),
+    avatar: formData.get('avatar'),
+  });
+
+  if (!validatedFields.success) {
+    return { errors: validatedFields.error.flatten().fieldErrors, message: 'Validation failed.', success: false };
+  }
+
+  const { name, title, quote, rating, avatar } = validatedFields.data;
+  let avatar_url: string | null = null;
+
+  // Handle optional avatar upload
+  if (avatar && avatar.size > 0) {
+    const avatarFileName = `${Date.now()}-${avatar.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(avatarFileName, avatar);
+
+    if (uploadError) {
+      return { message: `Storage Error: ${uploadError.message}`, success: false };
+    }
+    
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(avatarFileName);
+    avatar_url = publicUrl;
+  }
+
+  const testimonialData = { name, title, quote, rating, avatar_url };
+
+  const { error: dbError } = await supabase.from('testimonials').insert([testimonialData]);
+
+  if (dbError) {
+    // If db insert fails, try to remove uploaded avatar
+    if (avatar_url) {
+      const fileName = avatar_url.split('/').pop();
+      if (fileName) {
+        await supabase.storage.from('avatars').remove([fileName]);
+      }
+    }
+    return { message: `Database Error: ${dbError.message}`, success: false };
+  }
+
+  revalidatePath('/cms/testimonials');
+  revalidatePath('/#testimonials');
+  return { message: 'Testimonial added successfully.', success: true };
+}
+
+
+export async function deleteTestimonial(id: string, avatarUrl: string | null) {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+
+  const { error } = await supabase.from('testimonials').delete().eq('id', id);
+
+  if (error) {
+    return { success: false, message: `Database Error: ${error.message}` };
+  }
+
+  if (avatarUrl) {
+    const fileName = avatarUrl.split('/').pop();
+    if(fileName) {
+        const { error: storageError } = await supabase.storage.from('avatars').remove([`${fileName}`]);
+         if (storageError) {
+            console.warn(`Could not delete avatar from storage: ${storageError.message}`);
+         }
+    }
+  }
+
+  revalidatePath('/cms/testimonials');
+  revalidatePath('/#testimonials');
+  return { success: true, message: "Testimonial deleted successfully." };
+}
+
+export async function getTestimonials() {
+    const cookieStore = cookies();
+    const supabase = createClient(cookieStore);
+    return supabase
+      .from('testimonials')
+      .select('*')
+      .order('created_at', { ascending: false });
+}
