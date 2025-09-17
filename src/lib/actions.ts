@@ -281,7 +281,7 @@ const TestimonialSchema = z.object({
   name: z.string().min(2, "Name is required."),
   title: z.string().min(2, "Title/company is required."),
   quote: z.string().min(10, "Quote must be at least 10 characters."),
-  rating: z.coerce.number().int().min(1).max(5),
+  rating: z.coerce.number().int().min(1, "Rating is required. Please select at least one star.").max(5),
   avatar: z.any().optional(),
 });
 
@@ -373,3 +373,5 @@ export async function getTestimonials() {
       .select('*')
       .order('created_at', { ascending: false });
 }
+
+    
