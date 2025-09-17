@@ -75,6 +75,17 @@ function AddTestimonialForm({ onTestimonialAdded }: { onTestimonialAdded: () => 
   const dialogCloseRef = useRef<HTMLButtonElement>(null);
   const initialState: LoginState = { message: null };
   const [state, formAction] = useActionState(addTestimonial, initialState);
+  const [rating, setRating] = useState(0);
+
+
+  function SubmitButton() {
+    const { pending } = useFormStatus();
+    return (
+      <Button type="submit" disabled={pending}>
+        {pending ? "Adding..." : "Add Testimonial"}
+      </Button>
+    );
+  }
 
   useEffect(() => {
     if (state?.success) {
@@ -83,6 +94,7 @@ function AddTestimonialForm({ onTestimonialAdded }: { onTestimonialAdded: () => 
         description: state.message,
       });
       formRef.current?.reset();
+      setRating(0);
       onTestimonialAdded();
       dialogCloseRef.current?.click();
     } else if (state?.message && !state.success) {
@@ -109,6 +121,7 @@ function AddTestimonialForm({ onTestimonialAdded }: { onTestimonialAdded: () => 
           </DialogDescription>
         </DialogHeader>
         <form action={formAction} ref={formRef}>
+          <input type="hidden" name="rating" value={rating} />
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -118,7 +131,7 @@ function AddTestimonialForm({ onTestimonialAdded }: { onTestimonialAdded: () => 
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="title">Client Title / Company</Label>
-                    <Input id="title" name="title" placeholder="e.g., CEO, Innovate Inc." required />
+                    <Input id="title" name="title" placeholder="e.g., CEO, Innovate Inc." />
                     {state?.errors?.title && <p className="text-sm text-destructive">{state.errors.title[0]}</p>}
                 </div>
             </div>
@@ -127,10 +140,18 @@ function AddTestimonialForm({ onTestimonialAdded }: { onTestimonialAdded: () => 
               <Textarea id="quote" name="quote" placeholder="The final product exceeded all our expectations..." required />
               {state?.errors?.quote && <p className="text-sm text-destructive">{state.errors.quote[0]}</p>}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <div className="space-y-2">
-                    <Label htmlFor="rating">Rating (1-5)</Label>
-                    <Input id="rating" name="rating" type="number" min="1" max="5" defaultValue="5" required />
+                     <Label>Rating</Label>
+                    <div className="flex items-center gap-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                            key={star}
+                            onClick={() => setRating(star)}
+                            className={rating >= star ? "h-6 w-6 cursor-pointer text-yellow-400 fill-yellow-400" : "h-6 w-6 cursor-pointer text-muted-foreground/50"}
+                        />
+                        ))}
+                    </div>
                     {state?.errors?.rating && <p className="text-sm text-destructive">{state.errors.rating[0]}</p>}
                 </div>
                 <div className="space-y-2">
@@ -146,7 +167,7 @@ function AddTestimonialForm({ onTestimonialAdded }: { onTestimonialAdded: () => 
                     Cancel
                 </Button>
               </DialogClose>
-            <SubmitButton pendingText="Adding..." text="Add Testimonial" />
+            <SubmitButton />
           </DialogFooter>
         </form>
         <DialogClose ref={dialogCloseRef} className="hidden" />
@@ -417,3 +438,6 @@ export default function TestimonialsView({ initialTestimonials }: { initialTesti
     </div>
   );
 }
+
+
+    
