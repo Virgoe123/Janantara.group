@@ -18,9 +18,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import Autoplay from "embla-carousel-autoplay";
+
 
 type Project = {
   id: string;
@@ -134,6 +136,10 @@ export function Projects() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const plugin = useRef(
+      Autoplay({ delay: 3000, stopOnInteraction: true })
+    );
+
     useEffect(() => {
         const fetchProjects = async () => {
             const supabase = createClient();
@@ -176,6 +182,9 @@ export function Projects() {
          </div>
        ) : projects && projects.length > 0 ? (
           <Carousel
+            plugins={[plugin.current]}
+            onMouseEnter={plugin.current.stop}
+            onMouseLeave={plugin.current.reset}
             opts={{
               align: "start",
               loop: projects.length > 2,
