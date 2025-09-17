@@ -363,7 +363,7 @@ const UpdateTestimonialSchema = z.object({
   title: z.string().min(2, "Title/company is required."),
   quote: z.string().min(10, "Quote must be at least 10 characters."),
   rating: z.coerce.number().int().min(1).max(5),
-  is_published: z.preprocess((val) => val === 'true', z.boolean()),
+  is_published: z.preprocess((val) => String(val) === 'true', z.boolean()),
 });
 
 export async function updateTestimonial(prevState: LoginState, formData: FormData): Promise<LoginState> {
