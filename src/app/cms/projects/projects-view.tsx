@@ -2,6 +2,7 @@
 'use client'
 
 import { useActionState, useRef, useEffect } from "react";
+import React from 'react';
 import { useFormStatus } from "react-dom";
 import Image from "next/image";
 import { getClients, getProjects, deleteProject, addProject, LoginState } from "@/lib/actions";
@@ -44,8 +45,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Link as LinkIcon, Trash2 } from "lucide-react";
+import { Link as LinkIcon, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
