@@ -58,10 +58,12 @@ function AddProjectForm({ onProjectAdded }: { onProjectAdded: () => void }) {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const dialogCloseRef = useRef<HTMLButtonElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const initialState: LoginState = { message: null };
   const [state, formAction] = useActionState(addProject, initialState);
+  
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
-  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -71,24 +73,33 @@ function AddProjectForm({ onProjectAdded }: { onProjectAdded: () => void }) {
     }
   };
 
-  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleGalleryFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const files = Array.from(e.target.files);
-      const previews = files.map(file => URL.createObjectURL(file));
-      setGalleryPreviews(previews);
+      setGalleryFiles(prev => [...prev, ...Array.from(e.target.files!)]);
     }
   };
+  
+  const removeGalleryFile = (index: number) => {
+    setGalleryFiles(prev => prev.filter((_, i) => i !== index));
+  }
 
-  const resetPreviews = () => {
+  const resetFormState = () => {
     setThumbnailPreview(null);
-    setGalleryPreviews([]);
+    setGalleryFiles([]);
+    formRef.current?.reset();
+  }
+
+  const handleFormAction = (payload: FormData) => {
+    galleryFiles.forEach(file => {
+      payload.append('images', file);
+    });
+    formAction(payload);
   }
 
   useEffect(() => {
     if (state?.success) {
       toast({ title: "Success!", description: state.message });
-      formRef.current?.reset();
-      resetPreviews();
+      resetFormState();
       onProjectAdded();
       dialogCloseRef.current?.click();
     } else if (state?.message && !state.success) {
@@ -97,7 +108,7 @@ function AddProjectForm({ onProjectAdded }: { onProjectAdded: () => void }) {
   }, [state, onProjectAdded, toast]);
 
   return (
-    <Dialog onOpenChange={(open) => { if (!open) { formRef.current?.reset(); resetPreviews(); } }}>
+    <Dialog onOpenChange={(open) => { if (!open) resetFormState() }}>
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" /> Add New Project
@@ -108,7 +119,7 @@ function AddProjectForm({ onProjectAdded }: { onProjectAdded: () => void }) {
           <DialogTitle>Add New Project</DialogTitle>
           <DialogDescription>Fill out the details to add a new project.</DialogDescription>
         </DialogHeader>
-        <form action={formAction} ref={formRef}>
+        <form action={handleFormAction} ref={formRef}>
           <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
             <div className="space-y-2">
               <Label htmlFor="title">Project Title</Label>
@@ -125,7 +136,7 @@ function AddProjectForm({ onProjectAdded }: { onProjectAdded: () => void }) {
               <Textarea id="description" name="description" placeholder="A short description of the project." />
               {state?.errors?.description && <p className="text-sm text-destructive">{state.errors.description[0]}</p>}
             </div>
-             <div className="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="thumbnail">Thumbnail Image</Label>
               <Input id="thumbnail" name="thumbnail" type="file" required accept="image/*" className="file:text-foreground" onChange={handleThumbnailChange} />
               {state?.errors?.thumbnail && <p className="text-sm text-destructive">{Array.isArray(state.errors.thumbnail) ? state.errors.thumbnail.join(', ') : state.errors.thumbnail}</p>}
@@ -135,16 +146,28 @@ function AddProjectForm({ onProjectAdded }: { onProjectAdded: () => void }) {
                 <Image src={thumbnailPreview} alt="Thumbnail Preview" width={100} height={75} className="rounded-md object-cover w-24 h-auto" />
               </div>
             )}
+            
             <div className="space-y-2">
-              <Label htmlFor="images">Gallery Images (Optional)</Label>
-              <Input id="images" name="images" type="file" multiple accept="image/*" className="file:text-foreground" onChange={handleGalleryChange} />
+              <Label>Gallery Images (Optional)</Label>
+              <Input id="images-input" name="images-input-selector" type="file" multiple accept="image/*" className="sr-only" ref={galleryInputRef} onChange={handleGalleryFilesChange} />
+              <Button type="button" variant="outline" onClick={() => galleryInputRef.current?.click()}>
+                  <ImagePlus className="mr-2"/> Add Images
+              </Button>
               {state?.errors?.images && <p className="text-sm text-destructive">{Array.isArray(state.errors.images) ? state.errors.images.join(', '): state.errors.images}</p>}
+              
+              {galleryFiles.length > 0 && (
+                <div className="flex flex-wrap gap-2 p-2 border rounded-md">
+                  {galleryFiles.map((file, i) => (
+                    <div key={i} className="relative w-20 h-20">
+                      <Image src={URL.createObjectURL(file)} alt="Preview" layout="fill" className="rounded-md object-cover" />
+                      <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => removeGalleryFile(i)}>
+                        <XIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            {galleryPreviews.length > 0 && (
-              <div className="flex flex-wrap gap-2 p-2 border rounded-md">
-                {galleryPreviews.map((src, i) => <Image key={i} src={src} alt="Preview" width={80} height={80} className="rounded-md object-cover w-20 h-20" />)}
-              </div>
-            )}
           </div>
           <DialogFooter className="mt-4">
             <DialogClose asChild ref={dialogCloseRef}><Button type="button" variant="secondary">Cancel</Button></DialogClose>
@@ -160,12 +183,13 @@ function EditProjectForm({ project, onProjectUpdated }: { project: Project, onPr
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const dialogCloseRef = useRef<HTMLButtonElement>(null);
+  const newGalleryInputRef = useRef<HTMLInputElement>(null);
   const initialState: LoginState = { message: null };
   const [state, formAction] = useActionState(updateProject, initialState);
   
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(project.thumbnail_url);
   const [galleryImages, setGalleryImages] = useState(project.image_urls || []);
-  const [newGalleryPreviews, setNewGalleryPreviews] = useState<string[]>([]);
+  const [newGalleryFiles, setNewGalleryFiles] = useState<File[]>([]);
   
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -173,17 +197,26 @@ function EditProjectForm({ project, onProjectUpdated }: { project: Project, onPr
     }
   };
 
-  const handleRemoveGalleryImage = (url: string) => {
+  const handleRemoveExistingGalleryImage = (url: string) => {
     setGalleryImages(prev => prev.filter(imgUrl => imgUrl !== url));
   };
   
-  const handleNewGalleryImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files);
-      const previews = files.map(file => URL.createObjectURL(file));
-      setNewGalleryPreviews(previews);
+  const handleNewGalleryFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+     if (e.target.files) {
+      setNewGalleryFiles(prev => [...prev, ...Array.from(e.target.files!)]);
     }
   };
+
+  const removeNewGalleryFile = (index: number) => {
+    setNewGalleryFiles(prev => prev.filter((_, i) => i !== index));
+  }
+
+  const handleFormAction = (payload: FormData) => {
+    newGalleryFiles.forEach(file => {
+      payload.append('new_gallery_images', file);
+    });
+    formAction(payload);
+  }
 
   useEffect(() => {
     if (state?.success) {
@@ -198,7 +231,7 @@ function EditProjectForm({ project, onProjectUpdated }: { project: Project, onPr
   const resetFormState = () => {
     setThumbnailPreview(project.thumbnail_url);
     setGalleryImages(project.image_urls || []);
-    setNewGalleryPreviews([]);
+    setNewGalleryFiles([]);
     formRef.current?.reset();
   }
 
@@ -212,7 +245,7 @@ function EditProjectForm({ project, onProjectUpdated }: { project: Project, onPr
           <DialogTitle>Edit Project</DialogTitle>
           <DialogDescription>Update the details for "{project.title}".</DialogDescription>
         </DialogHeader>
-        <form action={formAction} ref={formRef}>
+        <form action={handleFormAction} ref={formRef}>
           <input type="hidden" name="id" value={project.id} />
           <input type="hidden" name="existing_gallery_images" value={galleryImages.join(',')} />
 
@@ -253,7 +286,7 @@ function EditProjectForm({ project, onProjectUpdated }: { project: Project, onPr
                   {galleryImages.map((url) => (
                     <div key={url} className="relative w-20 h-20">
                       <Image src={url} alt="Existing" layout="fill" className="rounded-md object-cover" />
-                      <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => handleRemoveGalleryImage(url)}>
+                      <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => handleRemoveExistingGalleryImage(url)}>
                         <XIcon className="h-4 w-4" />
                       </Button>
                     </div>
@@ -264,14 +297,26 @@ function EditProjectForm({ project, onProjectUpdated }: { project: Project, onPr
             
             <div className="space-y-2">
               <Label htmlFor={`new_gallery_images-${project.id}`}>Add New Gallery Images (Optional)</Label>
-              <Input id={`new_gallery_images-${project.id}`} name="new_gallery_images" type="file" multiple accept="image/*" className="file:text-foreground" onChange={handleNewGalleryImagesChange} />
+              <Input id={`new_gallery_images_selector-${project.id}`} name="new_gallery_images_selector" type="file" multiple accept="image/*" className="sr-only" ref={newGalleryInputRef} onChange={handleNewGalleryFilesChange} />
+              <Button type="button" variant="outline" onClick={() => newGalleryInputRef.current?.click()}>
+                  <ImagePlus className="mr-2"/> Add Images
+              </Button>
+
               {state?.errors?.new_gallery_images && <p className="text-sm text-destructive">{Array.isArray(state.errors.new_gallery_images) ? state.errors.new_gallery_images.join(', ') : state.errors.new_gallery_images}</p>}
+              
+              {newGalleryFiles.length > 0 && (
+                <div className="flex flex-wrap gap-2 p-2 border rounded-md mt-2">
+                  {newGalleryFiles.map((file, i) => (
+                    <div key={i} className="relative w-20 h-20">
+                      <Image src={URL.createObjectURL(file)} alt="New Preview" layout="fill" className="rounded-md object-cover" />
+                      <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => removeNewGalleryFile(i)}>
+                        <XIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-             {newGalleryPreviews.length > 0 && (
-              <div className="flex flex-wrap gap-2 p-2 border rounded-md">
-                {newGalleryPreviews.map((src, i) => <Image key={i} src={src} alt="New Preview" width={80} height={80} className="rounded-md object-cover w-20 h-20" />)}
-              </div>
-            )}
           </div>
           <DialogFooter className="mt-4">
             <DialogClose asChild ref={dialogCloseRef}><Button type="button" variant="secondary">Cancel</Button></DialogClose>
