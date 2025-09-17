@@ -70,9 +70,9 @@ export default async function CmsLayout({
         <SidebarContent>
           <SidebarMenu className="gap-y-2 p-2">
             {menuItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
+                <SidebarMenuItem key={item.href} className="group-data-[state=collapsed]:justify-center flex">
                 <SidebarMenuButton asChild size="lg" tooltip={item.label}>
-                    <Link href={item.href} className="flex group-data-[state=expanded]:justify-start justify-center">
+                    <Link href={item.href} className="flex group-data-[state=expanded]:justify-start">
                         {React.cloneElement(item.icon, { className: "h-5 w-5 shrink-0"})}
                         <span className="group-data-[state=collapsed]:opacity-0 transition-opacity duration-200">{item.label}</span>
                     </Link>
