@@ -67,7 +67,7 @@ export default function ReviewForm() {
         <div className="text-center py-12 space-y-4 flex flex-col items-center">
             <CheckCircle className="h-16 w-16 text-green-500"/>
             <h2 className="text-2xl font-bold font-headline">Thank You!</h2>
-            <p className="text-muted-foreground max-w-md">{state?.message || "Your review has been submitted for verification. We appreciate you taking the time to share your feedback."}</p>
+            <p className="text-muted-foreground max-w-md">{state?.message || "Your review has been published. We appreciate you taking the time to share your feedback."}</p>
             <Button variant="outline" onClick={() => setShowSuccess(false)}>Submit Another Review</Button>
         </div>
     )

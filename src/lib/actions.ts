@@ -336,7 +336,7 @@ export async function addTestimonial(prevState: LoginState, formData: FormData):
       quote, 
       rating, 
       avatar_url,
-      is_published: false // Default to not published
+      is_published: true // Default to published
   };
 
   const { error: dbError } = await supabase.from('testimonials').insert([testimonialData]);
@@ -354,7 +354,7 @@ export async function addTestimonial(prevState: LoginState, formData: FormData):
 
   revalidatePath('/cms/testimonials');
   revalidatePath('/#testimonials');
-  return { message: 'Your review has been submitted for verification.', success: true };
+  return { message: 'Thank you! Your review has been published.', success: true };
 }
 
 const UpdateTestimonialSchema = z.object({
@@ -363,7 +363,6 @@ const UpdateTestimonialSchema = z.object({
   title: z.string().min(2, "Title/company is required."),
   quote: z.string().min(10, "Quote must be at least 10 characters."),
   rating: z.coerce.number().int().min(1).max(5),
-  is_published: z.preprocess((val) => String(val) === 'true', z.boolean()),
 });
 
 export async function updateTestimonial(prevState: LoginState, formData: FormData): Promise<LoginState> {
@@ -376,7 +375,6 @@ export async function updateTestimonial(prevState: LoginState, formData: FormDat
     title: formData.get('title'),
     quote: formData.get('quote'),
     rating: formData.get('rating'),
-    is_published: formData.get('is_published'),
   });
 
   if (!validatedFields.success) {

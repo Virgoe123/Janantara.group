@@ -35,13 +35,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Table,
   TableBody,
   TableCell,
@@ -124,7 +117,7 @@ function AddTestimonialForm({ onTestimonialAdded }: { onTestimonialAdded: () => 
         <DialogHeader>
           <DialogTitle>Add New Testimonial</DialogTitle>
           <DialogDescription>
-            Fill out the details to add a new testimonial. It will be saved as a draft.
+            Fill out the details to add a new testimonial. It will be published immediately.
           </DialogDescription>
         </DialogHeader>
         <form action={formAction} ref={formRef}>
@@ -188,7 +181,6 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
   const dialogCloseRef = useRef<HTMLButtonElement>(null);
   const initialState: LoginState = { message: null };
   const [state, formAction] = useActionState(updateTestimonial, initialState);
-  const [status, setStatus] = useState(String(testimonial.is_published));
 
   useEffect(() => {
     if (state?.success) {
@@ -218,13 +210,12 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
         <DialogHeader>
           <DialogTitle>Edit Testimonial</DialogTitle>
           <DialogDescription>
-            Update the testimonial details and publication status.
+            Update the testimonial details.
           </DialogDescription>
         </DialogHeader>
         <form action={formAction}>
           <input type="hidden" name="id" value={testimonial.id} />
-          <input type="hidden" name="is_published" value={status} />
-
+          
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -243,25 +234,10 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
               <Textarea id="quote-edit" name="quote" defaultValue={testimonial.quote} required />
               {state?.errors?.quote && <p className="text-sm text-destructive">{state.errors.quote[0]}</p>}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="rating-edit">Rating (1-5)</Label>
-                    <Input id="rating-edit" name="rating" type="number" min="1" max="5" defaultValue={testimonial.rating} required />
-                    {state?.errors?.rating && <p className="text-sm text-destructive">{state.errors.rating[0]}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="is_published">Status</Label>
-                  <Select value={status} onValueChange={setStatus}>
-                      <SelectTrigger id="is_published">
-                          <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                          <SelectItem value="true">Published</SelectItem>
-                          <SelectItem value="false">Draft</SelectItem>
-                      </SelectContent>
-                  </Select>
-                  {state?.errors?.is_published && <p className="text-sm text-destructive">{state.errors.is_published[0]}</p>}
-                </div>
+            <div className="space-y-2">
+                <Label htmlFor="rating-edit">Rating (1-5)</Label>
+                <Input id="rating-edit" name="rating" type="number" min="1" max="5" defaultValue={testimonial.rating} required />
+                {state?.errors?.rating && <p className="text-sm text-destructive">{state.errors.rating[0]}</p>}
             </div>
           </div>
           <DialogFooter>
@@ -303,7 +279,6 @@ function TestimonialsList({ testimonials, onTestimonialDeleted, onTestimonialUpd
                         <TableCell><Skeleton className="h-10 w-10 rounded-full" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-16" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-48" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-16" /></TableCell>
                         <TableCell className="text-right"><Skeleton className="h-8 w-16 inline-block" /></TableCell>
@@ -317,7 +292,7 @@ function TestimonialsList({ testimonials, onTestimonialDeleted, onTestimonialUpd
         return (
             <TableBody>
                 <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={6} className="h-24 text-center">
                         No testimonials found. Add one to get started.
                     </TableCell>
                 </TableRow>
@@ -339,13 +314,6 @@ function TestimonialsList({ testimonials, onTestimonialDeleted, onTestimonialUpd
               </TableCell>
               <TableCell className="font-medium">{testimonial.name}</TableCell>
               <TableCell>{testimonial.title}</TableCell>
-              <TableCell>
-                {testimonial.is_published ? (
-                    <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100/80"><Eye className="mr-1 h-3 w-3"/>Published</Badge>
-                ) : (
-                    <Badge variant="secondary"><EyeOff className="mr-1 h-3 w-3"/>Draft</Badge>
-                )}
-              </TableCell>
               <TableCell className="max-w-xs truncate">{testimonial.quote}</TableCell>
               <TableCell>
                 <div className="flex items-center gap-1">
@@ -396,7 +364,6 @@ function TestimonialsList({ testimonials, onTestimonialDeleted, onTestimonialUpd
             <TableHead className="w-[60px]">Avatar</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Title</TableHead>
-            <TableHead>Status</TableHead>
             <TableHead>Quote</TableHead>
             <TableHead>Rating</TableHead>
             <TableHead className="text-right w-[120px]">Actions</TableHead>
@@ -434,7 +401,7 @@ export default function TestimonialsView({ initialTestimonials }: { initialTesti
         <div className="flex items-center justify-between">
             <div className="space-y-1">
                 <h1 className="text-3xl font-bold font-headline tracking-tight">Testimonials</h1>
-                <p className="text-muted-foreground">Manage and verify client testimonials.</p>
+                <p className="text-muted-foreground">Manage client testimonials. All testimonials are published automatically.</p>
             </div>
             <AddTestimonialForm onTestimonialAdded={fetchTestimonials}/>
         </div>
