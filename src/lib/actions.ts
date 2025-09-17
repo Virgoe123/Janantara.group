@@ -400,8 +400,10 @@ export async function updateTestimonial(prevState: LoginState, formData: FormDat
 
 
 export async function deleteTestimonial(id: string, avatarUrl: string | null) {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const { error } = await supabase.from('testimonials').delete().eq('id', id);
 
@@ -432,4 +434,3 @@ export async function getTestimonials() {
       .select('*')
       .order('created_at', { ascending: false });
 }
-
