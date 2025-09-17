@@ -11,7 +11,7 @@ import TypingTitle from "./typing-title";
 
 type Project = {
   id: string;
-  image_urls: string[] | null;
+  thumbnail_url: string | null;
   title: string;
 };
 
@@ -20,7 +20,7 @@ export async function Hero() {
   const supabase = createClient(cookieStore);
   const { data: projects } = await supabase
     .from('projects')
-    .select('id, title, image_urls')
+    .select('id, title, thumbnail_url')
     .order('created_at', { ascending: false })
     .limit(10);
     

@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { z } from 'zod';
@@ -115,14 +114,19 @@ export async function getClients() {
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
+const fileSchema = z.any()
+  .refine((file) => file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+  .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file.type), "Only .jpg, .jpeg, .png and .webp formats are supported.");
+
 const AddProjectSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters."),
   description: z.string().optional(),
   link: z.string().url("Must be a valid URL.").optional().or(z.literal('')),
-  images: z.array(z.any())
-    .refine((files) => files.length > 0, "At least one image is required.")
-    .refine((files) => files.every((file) => file.size <= MAX_FILE_SIZE), `Max file size is 5MB.`)
-    .refine((files) => files.every((file) => ACCEPTED_IMAGE_TYPES.includes(file.type)), "Only .jpg, .jpeg, .png and .webp formats are supported.")
+  thumbnail: z.any()
+    .refine(file => file?.size > 0, "Thumbnail image is required.")
+    .refine(file => file?.size <= MAX_FILE_SIZE, 'Max file size is 5MB.')
+    .refine(file => ACCEPTED_IMAGE_TYPES.includes(file?.type), 'Only .jpg, .jpeg, .png, and .webp formats are supported.'),
+  images: z.array(z.any()).optional(),
 });
 
 
@@ -138,56 +142,63 @@ export async function addProject(prevState: LoginState, formData: FormData): Pro
     title: formData.get('title'),
     description: formData.get('description'),
     link: formData.get('link'),
-    images: images.filter(f => f.size > 0), // Filter out empty file inputs if any
+    thumbnail: formData.get('thumbnail'),
+    images: images.filter(f => f.size > 0),
   });
 
   if (!validatedFields.success) {
     return { errors: validatedFields.error.flatten().fieldErrors, message: 'Validation failed.', success: false };
   }
   
-  const { title, description, link, images: imageFiles } = validatedFields.data;
-
-  const imageUrls: string[] = [];
+  const { title, description, link, thumbnail, images: imageFiles } = validatedFields.data;
+  let thumbnailUrl: string | null = null;
+  const galleryImageUrls: string[] = [];
   
-  for (const image of imageFiles) {
-    const imageFileName = `${Date.now()}-${image.name}`;
-    const { error: uploadError } = await supabase.storage
-      .from('project_images')
-      .upload(imageFileName, image);
+  try {
+    // Upload thumbnail
+    const thumbFileName = `${Date.now()}-thumb-${thumbnail.name}`;
+    const { error: thumbUploadError } = await supabase.storage.from('project_images').upload(thumbFileName, thumbnail);
+    if (thumbUploadError) throw new Error(`Thumbnail upload error: ${thumbUploadError.message}`);
+    thumbnailUrl = supabase.storage.from('project_images').getPublicUrl(thumbFileName).data.publicUrl;
 
-    if (uploadError) {
-      // Cleanup uploaded files if one fails
-      for (const url of imageUrls) {
-          const fileName = url.split('/').pop()
-          if(fileName) await supabase.storage.from('project_images').remove([fileName]);
-      }
-      return { message: `Storage Error: ${uploadError.message}`, success: false };
+    // Upload gallery images
+    if (imageFiles) {
+        for (const image of imageFiles) {
+            const imageFileName = `${Date.now()}-gallery-${image.name}`;
+            const { error: imageUploadError } = await supabase.storage.from('project_images').upload(imageFileName, image);
+            if (imageUploadError) throw new Error(`Gallery image upload error: ${imageUploadError.message}`);
+            galleryImageUrls.push(supabase.storage.from('project_images').getPublicUrl(imageFileName).data.publicUrl);
+        }
     }
-    
-    const { data: { publicUrl } } = supabase.storage.from('project_images').getPublicUrl(imageFileName);
-    imageUrls.push(publicUrl);
+
+  } catch (error: any) {
+     // Cleanup on failure
+     if(thumbnailUrl) await supabase.storage.from('project_images').remove([thumbnailUrl.split('/').pop()!]);
+     if(galleryImageUrls.length > 0) await supabase.storage.from('project_images').remove(galleryImageUrls.map(url => url.split('/').pop()!));
+     return { message: error.message, success: false };
   }
+
 
   const projectData = {
     title,
     description: description || null,
     link: link || null,
-    image_urls: imageUrls,
+    thumbnail_url: thumbnailUrl,
+    image_urls: galleryImageUrls.length > 0 ? galleryImageUrls : null,
   };
 
   const { error: dbError } = await supabase.from('projects').insert([projectData]);
 
   if (dbError) {
     // Cleanup storage if db insert fails
-    for (const url of imageUrls) {
-        const fileName = url.split('/').pop()
-        if(fileName) await supabase.storage.from('project_images').remove([fileName]);
-    }
+     if(thumbnailUrl) await supabase.storage.from('project_images').remove([thumbnailUrl.split('/').pop()!]);
+     if(galleryImageUrls.length > 0) await supabase.storage.from('project_images').remove(galleryImageUrls.map(url => url.split('/').pop()!));
     return { message: `Database Error: ${dbError.message}`, success: false };
   }
 
   revalidatePath('/cms/projects');
   revalidatePath('/#projects');
+  revalidatePath('/');
   return { message: 'Project added successfully.', success: true };
 }
 
@@ -196,10 +207,9 @@ const UpdateProjectSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters."),
   description: z.string().optional(),
   link: z.string().url("Must be a valid URL.").optional().or(z.literal('')),
-  existing_images: z.string().optional(),
-  new_images: z.array(z.any()).optional()
-    .refine((files) => !files || files.every((file) => file.size <= MAX_FILE_SIZE), `Max file size is 5MB.`)
-    .refine((files) => !files || files.every((file) => ACCEPTED_IMAGE_TYPES.includes(file.type)), "Only .jpg, .jpeg, .png and .webp formats are supported.")
+  existing_gallery_images: z.string().optional(),
+  new_thumbnail: z.any().optional(),
+  new_gallery_images: z.array(z.any()).optional()
 });
 
 
@@ -209,104 +219,129 @@ export async function updateProject(prevState: LoginState, formData: FormData): 
         process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
     
-    const newImages = formData.getAll('new_images') as File[];
+    const newGalleryImages = formData.getAll('new_gallery_images') as File[];
     const validatedFields = UpdateProjectSchema.safeParse({
         id: formData.get('id'),
         title: formData.get('title'),
         description: formData.get('description'),
         link: formData.get('link'),
-        existing_images: formData.get('existing_images'),
-        new_images: newImages.filter(f => f.size > 0),
+        existing_gallery_images: formData.get('existing_gallery_images'),
+        new_thumbnail: formData.get('new_thumbnail'),
+        new_gallery_images: newGalleryImages.filter(f => f.size > 0),
     });
 
     if (!validatedFields.success) {
         return { errors: validatedFields.error.flatten().fieldErrors, message: 'Validation failed.', success: false };
     }
 
-    const { id, title, description, link, existing_images, new_images } = validatedFields.data;
+    const { id, title, description, link, existing_gallery_images, new_thumbnail, new_gallery_images } = validatedFields.data;
 
-    let existingImageUrls = existing_images ? existing_images.split(',') : [];
-
-    // Fetch the current project to see which images were removed
-    const { data: currentProject, error: fetchError } = await supabase.from('projects').select('image_urls').eq('id', id).single();
+    const { data: currentProject, error: fetchError } = await supabase.from('projects').select('thumbnail_url, image_urls').eq('id', id).single();
     if(fetchError) {
         return { message: 'Failed to fetch current project data.', success: false };
     }
 
-    const originalImageUrls = currentProject.image_urls || [];
-    const imagesToDelete = originalImageUrls.filter(url => !existingImageUrls.includes(url));
+    let finalThumbnailUrl = currentProject.thumbnail_url;
+    let existingGalleryUrls = existing_gallery_images ? existing_gallery_images.split(',').filter(Boolean) : [];
 
-    // Delete images from storage
-    if (imagesToDelete.length > 0) {
-        const fileNamesToDelete = imagesToDelete.map(url => url.split('/').pop()).filter(Boolean) as string[];
-        const { error: storageError } = await supabase.storage.from('project_images').remove(fileNamesToDelete);
-        if (storageError) {
-            console.warn(`Could not delete some images from storage: ${storageError.message}`);
+    try {
+        // Handle thumbnail update
+        if (new_thumbnail && new_thumbnail.size > 0) {
+            // Delete old thumbnail if it exists
+            if (currentProject.thumbnail_url) {
+                const oldThumbName = currentProject.thumbnail_url.split('/').pop();
+                if(oldThumbName) await supabase.storage.from('project_images').remove([oldThumbName]);
+            }
+            // Upload new thumbnail
+            const thumbFileName = `${Date.now()}-thumb-${new_thumbnail.name}`;
+            const { error: thumbUploadError } = await supabase.storage.from('project_images').upload(thumbFileName, new_thumbnail);
+            if (thumbUploadError) throw new Error(`Thumbnail upload error: ${thumbUploadError.message}`);
+            finalThumbnailUrl = supabase.storage.from('project_images').getPublicUrl(thumbFileName).data.publicUrl;
         }
+
+        // Handle gallery image deletions
+        const originalGalleryUrls = currentProject.image_urls || [];
+        const imagesToDelete = originalGalleryUrls.filter(url => !existingGalleryUrls.includes(url));
+        if (imagesToDelete.length > 0) {
+            const fileNamesToDelete = imagesToDelete.map(url => url.split('/').pop()).filter(Boolean) as string[];
+            await supabase.storage.from('project_images').remove(fileNamesToDelete);
+        }
+
+        // Handle new gallery image uploads
+        const newImageUrls: string[] = [];
+        if (new_gallery_images && new_gallery_images.length > 0) {
+            for (const image of new_gallery_images) {
+                const imageFileName = `${Date.now()}-gallery-${image.name}`;
+                const { error: uploadError } = await supabase.storage.from('project_images').upload(imageFileName, image);
+                if (uploadError) throw new Error(`Storage Error: ${uploadError.message}`);
+                newImageUrls.push(supabase.storage.from('project_images').getPublicUrl(imageFileName).data.publicUrl);
+            }
+        }
+        
+        const finalGalleryUrls = [...existingGalleryUrls, ...newImageUrls];
+
+        const { error: dbError } = await supabase
+            .from('projects')
+            .update({
+                title,
+                description: description || null,
+                link: link || null,
+                thumbnail_url: finalThumbnailUrl,
+                image_urls: finalGalleryUrls.length > 0 ? finalGalleryUrls : null,
+            })
+            .eq('id', id);
+
+        if (dbError) throw new Error(`Database Error: ${dbError.message}`);
+
+    } catch (error: any) {
+        return { message: error.message, success: false };
     }
     
-    // Upload new images
-    const newImageUrls: string[] = [];
-    if (new_images && new_images.length > 0) {
-        for (const image of new_images) {
-            const imageFileName = `${Date.now()}-${image.name}`;
-            const { error: uploadError } = await supabase.storage.from('project_images').upload(imageFileName, image);
-
-            if (uploadError) {
-                // Potential cleanup of newly uploaded files if one fails
-                return { message: `Storage Error: ${uploadError.message}`, success: false };
-            }
-            const { data: { publicUrl } } = supabase.storage.from('project_images').getPublicUrl(imageFileName);
-            newImageUrls.push(publicUrl);
-        }
-    }
-
-    const finalImageUrls = [...existingImageUrls, ...newImageUrls];
-
-    const { error: dbError } = await supabase
-        .from('projects')
-        .update({
-            title,
-            description: description || null,
-            link: link || null,
-            image_urls: finalImageUrls,
-        })
-        .eq('id', id);
-
-    if (dbError) {
-        return { message: `Database Error: ${dbError.message}`, success: false };
-    }
-
     revalidatePath('/cms/projects');
     revalidatePath('/#projects');
+    revalidatePath('/');
     return { message: 'Project updated successfully.', success: true };
 }
 
 
-export async function deleteProject(id: string, imageUrls: string[]) {
+export async function deleteProject(id: string) {
   const supabase = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const { error } = await supabase.from('projects').delete().eq('id', id);
+  const { data: project, error: fetchError } = await supabase.from('projects').select('thumbnail_url, image_urls').eq('id', id).single();
 
+  if (fetchError) {
+      return { success: false, message: `Could not fetch project to delete images: ${fetchError.message}` };
+  }
+
+  const { error } = await supabase.from('projects').delete().eq('id', id);
   if (error) {
     return { success: false, message: `Database Error: ${error.message}` };
   }
 
-  if (imageUrls && imageUrls.length > 0) {
-    const fileNames = imageUrls.map(url => url.split('/').pop()).filter(Boolean) as string[];
+  const imagesToDelete: string[] = [];
+  if (project.thumbnail_url) {
+      imagesToDelete.push(project.thumbnail_url);
+  }
+  if (project.image_urls && project.image_urls.length > 0) {
+      imagesToDelete.push(...project.image_urls);
+  }
+  
+  if (imagesToDelete.length > 0) {
+    const fileNames = imagesToDelete.map(url => url.split('/').pop()).filter(Boolean) as string[];
     if (fileNames.length > 0) {
         const { error: storageError } = await supabase.storage.from('project_images').remove(fileNames);
          if (storageError) {
-            console.warn(`Could not delete images from storage: ${storageError.message}`);
+            console.warn(`Could not delete some images from storage: ${storageError.message}`);
          }
     }
   }
 
   revalidatePath('/cms/projects');
   revalidatePath('/#projects');
+  revalidatePath('/');
   return { success: true, message: "Project deleted successfully." };
 }
 
@@ -319,6 +354,7 @@ export async function getProjects() {
         id,
         title,
         description,
+        thumbnail_url,
         image_urls,
         link,
         created_at
@@ -400,7 +436,6 @@ const TestimonialSchema = z.object({
   quote: z.string().min(10, "Quote must be at least 10 characters."),
   rating: z.coerce.number().int().min(1, "Rating is required. Please select at least one star.").max(5),
   avatar: z.any().optional(),
-  is_published: z.boolean().default(false),
 });
 
 export async function addTestimonial(prevState: LoginState, formData: FormData): Promise<LoginState> {
@@ -417,7 +452,6 @@ export async function addTestimonial(prevState: LoginState, formData: FormData):
     quote: formData.get('quote'),
     rating: formData.get('rating'),
     avatar: formData.get('avatar'),
-    is_published: fromCms,
   });
 
   if (!validatedFields.success) {
@@ -428,7 +462,7 @@ export async function addTestimonial(prevState: LoginState, formData: FormData):
     };
   }
 
-  const { name, quote, rating, avatar, is_published } = validatedFields.data;
+  const { name, quote, rating, avatar } = validatedFields.data;
   const title = validatedFields.data.title || "User";
   let avatar_url: string | null = null;
 
@@ -453,7 +487,7 @@ export async function addTestimonial(prevState: LoginState, formData: FormData):
       quote, 
       rating, 
       avatar_url,
-      is_published,
+      is_published: fromCms,
   };
 
   const { error: dbError } = await supabase.from('testimonials').insert([testimonialData]);
@@ -492,13 +526,7 @@ export async function updateTestimonial(prevState: LoginState, formData: FormDat
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const validatedFields = UpdateTestimonialSchema.safeParse({
-    id: formData.get('id'),
-    name: formData.get('name'),
-    title: formData.get('title'),
-    quote: formData.get('quote'),
-    rating: formData.get('rating'),
-  });
+  const validatedFields = UpdateTestimonialSchema.safeParse(Object.fromEntries(formData.entries()));
 
   if (!validatedFields.success) {
     return {
@@ -584,3 +612,4 @@ export async function toggleTestimonialStatus(id: string, currentState: boolean)
     
 
     
+

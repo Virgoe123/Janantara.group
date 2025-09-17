@@ -26,46 +26,21 @@ type Project = {
   id: string;
   title: string;
   description: string | null;
+  thumbnail_url: string | null;
   image_urls: string[] | null;
   link: string | null;
 };
 
-const ProjectGallery = ({ images, title }: { images: string[], title: string }) => {
-  return (
-    <Dialog>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
-        <Carousel className="w-full">
-          <CarouselContent>
-            {images.map((url, index) => (
-              <CarouselItem key={index}>
-                <div className="aspect-video relative">
-                  <Image src={url} alt={`${title} image ${index + 1}`} fill className="object-contain rounded-md" />
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="left-2" />
-          <CarouselNext className="right-2" />
-        </Carousel>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-
 const ProjectCard = ({ project }: { project: Project }) => {
-  const hasImages = project.image_urls && project.image_urls.length > 0;
-  const coverImage = hasImages ? project.image_urls![0] : null;
+  const hasGallery = project.image_urls && project.image_urls.length > 0;
+  const coverImage = project.thumbnail_url;
 
   return (
     <Dialog>
         <Card className="overflow-hidden group h-full flex flex-col">
-            <DialogTrigger asChild>
-              <div className="relative block cursor-pointer">
-                  <div className="aspect-[4/3] w-full relative">
+          <div className="relative block">
+              <DialogTrigger asChild disabled={!hasGallery}>
+                <div className="aspect-[4/3] w-full relative" role={hasGallery ? 'button' : 'img'}>
                     {coverImage ? (
                     <Image
                         src={coverImage}
@@ -79,9 +54,9 @@ const ProjectCard = ({ project }: { project: Project }) => {
                     </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                  </div>
-              </div>
-            </DialogTrigger>
+                </div>
+              </DialogTrigger>
+          </div>
           <CardContent className="p-4 flex flex-col flex-grow">
             <div className="flex-grow">
               <p className="font-semibold text-lg">{project.title}</p>
@@ -95,7 +70,7 @@ const ProjectCard = ({ project }: { project: Project }) => {
           </CardContent>
         </Card>
 
-        {hasImages && (
+        {hasGallery && (
             <DialogContent className="max-w-4xl p-0 border-0">
                 <Carousel className="w-full">
                 <CarouselContent>

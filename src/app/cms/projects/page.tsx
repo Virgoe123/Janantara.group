@@ -11,6 +11,7 @@ export type Project = {
   id: string;
   title: string;
   description: string | null;
+  thumbnail_url: string | null;
   image_urls: string[] | null;
   link: string | null;
   created_at: string;

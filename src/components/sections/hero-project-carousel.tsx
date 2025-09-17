@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 type Project = {
   id: string;
-  image_urls: string[] | null;
+  thumbnail_url: string | null;
   title: string;
 };
 
@@ -16,7 +16,7 @@ export default function HeroProjectCarousel({ projects }: { projects: Project[] 
   }
 
   // Filter projects that have at least one image and flatten them
-  const validProjects = projects.filter(p => p.image_urls && p.image_urls.length > 0);
+  const validProjects = projects.filter(p => p.thumbnail_url);
   
   if (validProjects.length === 0) {
       return null;
@@ -34,9 +34,9 @@ export default function HeroProjectCarousel({ projects }: { projects: Project[] 
           {duplicatedProjects.map((project, index) => (
             <li key={`${project.id}-${index}`} className="flex-shrink-0">
               <div className="w-40 h-24 relative transform transition-transform duration-500 hover:scale-105">
-                {project.image_urls && project.image_urls[0] && (
+                {project.thumbnail_url && (
                   <Image
-                    src={project.image_urls[0]}
+                    src={project.thumbnail_url}
                     alt={project.title}
                     fill
                     className="object-cover rounded-lg shadow-lg"
