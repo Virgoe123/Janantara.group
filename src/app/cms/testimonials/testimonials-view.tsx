@@ -251,7 +251,7 @@ function TestimonialsList({ testimonials, onTestimonialDeleted, isLoading }: { t
   }
 
   return (
-     <Card className="shadow-md">
+     <Card className="shadow-md w-full">
       <Table>
         <TableHeader>
           <TableRow>
