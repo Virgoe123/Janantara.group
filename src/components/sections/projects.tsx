@@ -28,6 +28,7 @@ type Project = {
   description: string | null;
   thumbnail_url: string | null;
   image_urls: string[] | null;
+  link: string | null;
 };
 
 const ProjectCard = ({ project }: { project: Project }) => {
@@ -77,7 +78,7 @@ const ProjectCard = ({ project }: { project: Project }) => {
       </Card>
 
       {(hasGallery || coverImage) && (
-          <DialogContent className="max-w-4xl p-2 sm:p-4 border-0">
+          <DialogContent className="max-w-2xl p-2 sm:p-4 border-0">
             <DialogHeader>
                 <DialogTitle>{project.title}</DialogTitle>
             </DialogHeader>
@@ -112,7 +113,7 @@ const ProjectCard = ({ project }: { project: Project }) => {
 }
 
 const ProjectSkeleton = () => (
-    <Card className="overflow-hidden flex flex-col md:flex-row h-[200px] md:h-[250px]">
+    <Card className="overflow-hidden flex flex-col md:flex-row h-[250px]">
         <div className="md:w-2/5 bg-muted h-full">
             <Skeleton className="w-full h-full" />
         </div>
