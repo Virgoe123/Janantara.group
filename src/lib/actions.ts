@@ -289,7 +289,6 @@ const TestimonialSchema = z.object({
 });
 
 export async function addTestimonial(prevState: LoginState, formData: FormData): Promise<LoginState> {
-  // Use the service_role key to bypass RLS for public submissions.
   const supabase = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -336,13 +335,12 @@ export async function addTestimonial(prevState: LoginState, formData: FormData):
       quote, 
       rating, 
       avatar_url,
-      is_published: true // Default to published
+      is_published: true, // Always publish directly
   };
 
   const { error: dbError } = await supabase.from('testimonials').insert([testimonialData]);
 
   if (dbError) {
-    // If db insert fails, try to remove uploaded avatar
     if (avatar_url) {
       const fileName = avatar_url.split('/').pop();
       if (fileName) {
@@ -387,15 +385,12 @@ export async function updateTestimonial(prevState: LoginState, formData: FormDat
     };
   }
 
-  const { id } = validatedFields.data;
+  const { id, ...dataToUpdate } = validatedFields.data;
 
-  const { error } = await supabase.from('testimonials').update({
-    name: validatedFields.data.name,
-    title: validatedFields.data.title,
-    quote: validatedFields.data.quote,
-    rating: validatedFields.data.rating,
-  }).eq('id', id);
-
+  const { error } = await supabase
+    .from('testimonials')
+    .update(dataToUpdate)
+    .eq('id', id);
 
   if (error) {
     return { message: `Database Error: ${error.message}`, success: false };
