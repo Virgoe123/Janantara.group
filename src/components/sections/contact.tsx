@@ -3,13 +3,12 @@ import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { Instagram, Mail, Phone, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
+import { cn } from "@/lib/utils";
 
 const iconMap = {
-  whatsapp: <Phone className="h-8 w-8" />,
-  email: <Mail className="h-8 w-8" />,
-  instagram: <Instagram className="h-8 w-8" />,
+  whatsapp: <Phone className="h-6 w-6 text-primary" />,
+  email: <Mail className="h-6 w-6 text-primary" />,
+  instagram: <Instagram className="h-6 w-6 text-primary" />,
 };
 
 type ContactKey = 'whatsapp' | 'email' | 'instagram';
@@ -45,13 +44,13 @@ const getLabel = (key: ContactKey, value: string) => {
 const getActionText = (key: ContactKey) => {
     switch (key) {
         case 'whatsapp':
-            return 'Chat on WhatsApp';
+            return 'Chat Now';
         case 'email':
-            return 'Send an Email';
+            return 'Send Email';
         case 'instagram':
-            return 'Follow on Instagram';
+            return 'Follow';
         default:
-            return 'Learn More';
+            return 'Contact Us';
     }
 }
 
@@ -80,28 +79,34 @@ export async function Contact() {
         </div>
 
         {availableContacts.length > 0 ? (
-             <div className="mx-auto grid max-w-5xl items-stretch gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                {availableContacts.map(([key, value]) => (
-                    <Card key={key} className="flex flex-col overflow-hidden transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl">
-                         <CardHeader className="flex flex-col items-start gap-4 p-6">
-                            <div className="rounded-lg bg-primary/10 p-3 text-primary">
+             <div className="mx-auto max-w-3xl rounded-xl border bg-card text-card-foreground shadow-sm">
+                <div className="divide-y divide-border">
+                    {availableContacts.map(([key, value], index) => (
+                        <Link
+                            key={key}
+                            href={getLink(key, value)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(
+                                "group flex items-center justify-between p-6 transition-colors hover:bg-muted/50",
+                                index === 0 && "rounded-t-xl",
+                                index === availableContacts.length - 1 && "rounded-b-xl"
+                            )}
+                        >
+                            <div className="flex items-center gap-4">
                                 {iconMap[key]}
+                                <div>
+                                    <p className="font-semibold text-lg capitalize">{key}</p>
+                                    <p className="text-sm text-muted-foreground">{getLabel(key, value)}</p>
+                                </div>
                             </div>
-                            <div className="text-left">
-                                <CardTitle className="text-xl capitalize">{key}</CardTitle>
-                                <CardDescription>{getLabel(key, value)}</CardDescription>
+                            <div className="flex items-center gap-2 text-primary opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                                <span className="text-sm font-medium">{getActionText(key)}</span>
+                                <ArrowRight className="h-4 w-4" />
                             </div>
-                        </CardHeader>
-                        <div className="flex-grow"></div>
-                        <div className="p-6 pt-0">
-                            <Button asChild className="w-full">
-                                <Link href={getLink(key, value)} target="_blank" rel="noopener noreferrer">
-                                    {getActionText(key)} <ArrowRight className="ml-2 h-4 w-4" />
-                                </Link>
-                            </Button>
-                        </div>
-                    </Card>
-                ))}
+                        </Link>
+                    ))}
+                </div>
             </div>
         ) : (
              <div className="text-center py-8">
