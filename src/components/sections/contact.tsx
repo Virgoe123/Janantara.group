@@ -1,9 +1,6 @@
 
-import { createClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
-import { Instagram, Mail, Phone, ArrowRight } from "lucide-react";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { Instagram, Mail, Phone } from "lucide-react";
+import ContactItems from "./contact-items";
 
 const iconMap = {
   whatsapp: <Phone className="h-6 w-6 text-primary" />,
@@ -11,15 +8,20 @@ const iconMap = {
   instagram: <Instagram className="h-6 w-6 text-primary" />,
 };
 
-type ContactKey = 'whatsapp' | 'email' | 'instagram';
+export type ContactKey = 'whatsapp' | 'email' | 'instagram';
 
-const getLink = (key: ContactKey, value: string) => {
+export type ContactDetails = {
+    whatsapp: string;
+    email: string;
+    instagram: string;
+}
+
+export const getLink = (key: ContactKey, value: string) => {
     if (!value) return '#';
     switch (key) {
         case 'whatsapp':
             return `https://wa.me/${value.replace(/[^0-9]/g, '')}`;
         case 'email':
-            // Opens a pre-filled Gmail compose window in a new tab
             return `https://mail.google.com/mail/?view=cm&fs=1&to=${value}`;
         case 'instagram':
             return `https://instagram.com/${value.replace('@', '')}`;
@@ -28,11 +30,10 @@ const getLink = (key: ContactKey, value: string) => {
     }
 }
 
-const getLabel = (key: ContactKey, value: string) => {
+export const getLabel = (key: ContactKey, value: string) => {
     if (!value) return 'Not available';
      switch (key) {
         case 'whatsapp':
-            // Hide the phone number from the UI
             return `WhatsApp`;
         case 'email':
             return value;
@@ -43,7 +44,7 @@ const getLabel = (key: ContactKey, value: string) => {
     }
 }
 
-const getActionText = (key: ContactKey) => {
+export const getActionText = (key: ContactKey) => {
     switch (key) {
         case 'whatsapp':
             return 'Chat Now';
@@ -57,17 +58,7 @@ const getActionText = (key: ContactKey) => {
 }
 
 
-export async function Contact() {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-  const { data: settings } = await supabase.from('contact_settings').select('key, value');
-
-  const contactDetails = {
-    whatsapp: settings?.find(s => s.key === 'whatsapp')?.value || '',
-    email: settings?.find(s => s.key === 'email')?.value || '',
-    instagram: settings?.find(s => s.key === 'instagram')?.value || '',
-  }
-
+export async function Contact({ contactDetails }: { contactDetails: ContactDetails }) {
   const availableContacts = Object.entries(contactDetails).filter(([_, value]) => value) as [ContactKey, string][];
 
   return (
@@ -83,31 +74,7 @@ export async function Contact() {
         {availableContacts.length > 0 ? (
              <div className="mx-auto max-w-3xl rounded-xl border bg-card text-card-foreground shadow-sm">
                 <div className="divide-y divide-border">
-                    {availableContacts.map(([key, value], index) => (
-                        <Link
-                            key={key}
-                            href={getLink(key, value)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={cn(
-                                "group flex items-center justify-between p-6 transition-colors hover:bg-muted/50",
-                                index === 0 && "rounded-t-xl",
-                                index === availableContacts.length - 1 && "rounded-b-xl"
-                            )}
-                        >
-                            <div className="flex items-center gap-4">
-                                {iconMap[key]}
-                                <div>
-                                    <p className="font-semibold text-lg capitalize">{key}</p>
-                                    <p className="text-sm text-muted-foreground">{getLabel(key, value)}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2 text-primary opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                                <span className="text-sm font-medium">{getActionText(key)}</span>
-                                <ArrowRight className="h-4 w-4" />
-                            </div>
-                        </Link>
-                    ))}
+                    <ContactItems availableContacts={availableContacts} iconMap={iconMap} />
                 </div>
             </div>
         ) : (
