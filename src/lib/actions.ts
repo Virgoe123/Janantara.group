@@ -432,3 +432,4 @@ export async function getTestimonials() {
       .select('*')
       .order('created_at', { ascending: false });
 }
+
