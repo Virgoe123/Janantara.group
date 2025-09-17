@@ -1,18 +1,14 @@
 
 'use client'
 
-import React, { useActionState, useRef, useEffect, useState, useCallback } from "react";
+import React, { useActionState, useRef, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import Image from "next/image";
-import { getClients, getProjects, deleteProject, addProject, LoginState } from "@/lib/actions";
+import { getProjects, deleteProject, addProject, LoginState } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -46,20 +42,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Link as LinkIcon, Trash2, PlusCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 
-type Client = { id: string; name: string };
 type Project = { 
   id: string; 
   title: string; 
@@ -67,7 +55,6 @@ type Project = {
   image_url: string | null;
   link: string | null;
   created_at: string;
-  clients: { name: string } | null;
 };
 
 function SubmitButton() {
@@ -79,7 +66,7 @@ function SubmitButton() {
   );
 }
 
-function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProjectAdded: () => void }) {
+function AddProjectForm({ onProjectAdded }: { onProjectAdded: () => void }) {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const dialogCloseRef = useRef<HTMLButtonElement>(null);
@@ -120,29 +107,10 @@ function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProj
         </DialogHeader>
         <form action={formAction} ref={formRef}>
           <div className="space-y-4 py-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Project Title</Label>
-                <Input id="title" name="title" placeholder="e.g., Awesome Mobile App" required />
-                {state?.errors?.title && <p className="text-sm text-destructive">{state.errors.title[0]}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="clientId">Client (Optional)</Label>
-                <Select name="clientId">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a client" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="no-client">No Client</SelectItem>
-                    {clients.map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {state?.errors?.clientId && <p className="text-sm text-destructive">{state.errors.clientId[0]}</p>}
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="title">Project Title</Label>
+              <Input id="title" name="title" placeholder="e.g., Awesome Mobile App" required />
+              {state?.errors?.title && <p className="text-sm text-destructive">{state.errors.title[0]}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="link">Project Link (Optional)</Label>
@@ -199,7 +167,6 @@ function ProjectsList({ projects, onProjectDeleted, isLoading }: { projects: Pro
                    <TableRow key={i}>
                         <TableCell><Skeleton className="h-16 w-16 rounded-md" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-16" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                         <TableCell className="text-right"><Skeleton className="h-8 w-8 inline-block" /></TableCell>
@@ -213,7 +180,7 @@ function ProjectsList({ projects, onProjectDeleted, isLoading }: { projects: Pro
         return (
             <TableBody>
                 <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
+                    <TableCell colSpan={5} className="h-24 text-center">
                         No projects found. Add one to get started.
                     </TableCell>
                 </TableRow>
@@ -237,7 +204,6 @@ function ProjectsList({ projects, onProjectDeleted, isLoading }: { projects: Pro
                 ) : <div className="h-16 w-16 rounded-md bg-muted flex items-center justify-center text-xs text-muted-foreground">No Image</div>}
               </TableCell>
               <TableCell className="font-medium">{project.title}</TableCell>
-               <TableCell>{project.clients?.name ?? 'N/A'}</TableCell>
                <TableCell>
                 {project.link ? (
                   <Link href={project.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
@@ -279,13 +245,12 @@ function ProjectsList({ projects, onProjectDeleted, isLoading }: { projects: Pro
   }
 
   return (
-     <Card>
+     <Card className="shadow-md">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="w-[80px]">Image</TableHead>
             <TableHead>Title</TableHead>
-            <TableHead>Client</TableHead>
             <TableHead>Link</TableHead>
             <TableHead>Created</TableHead>
             <TableHead className="text-right w-[100px]">Actions</TableHead>
@@ -297,24 +262,14 @@ function ProjectsList({ projects, onProjectDeleted, isLoading }: { projects: Pro
   )
 }
 
-export default function ProjectsView({ initialClients, initialProjects }: { initialClients: Client[], initialProjects: Project[] }) {
-  const [clients, setClients] = useState<Client[]>(initialClients);
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
-  const [isLoadingProjects, setIsLoadingProjects] = useState(false);
+export default function ProjectsView({ initialProjects }: { initialProjects: Project[] }) {
+  const [projects, setProjects] = React.useState<Project[]>(initialProjects);
+  const [isLoadingProjects, setIsLoadingProjects] = React.useState(false);
   const { toast } = useToast();
 
-  const fetchClientsAndProjects = useCallback(async () => {
+  const fetchProjects = React.useCallback(async () => {
     setIsLoadingProjects(true);
-    const [clientResult, projectResult] = await Promise.all([
-        getClients(),
-        getProjects()
-    ]);
-    
-    if (clientResult.error) {
-      toast({ variant: "destructive", title: "Error", description: "Could not refresh clients." });
-    } else {
-      setClients(clientResult.data || []);
-    }
+    const projectResult = await getProjects();
 
     if (projectResult.error) {
       toast({ variant: "destructive", title: "Error", description: "Could not refresh projects." });
@@ -329,13 +284,13 @@ export default function ProjectsView({ initialClients, initialProjects }: { init
   }
   
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
         <div className="flex items-center justify-between">
-            <div>
-                <h1 className="text-2xl font-bold font-headline">Projects</h1>
+            <div className="space-y-1">
+                <h1 className="text-3xl font-bold font-headline tracking-tight">Projects</h1>
                 <p className="text-muted-foreground">Manage your portfolio projects.</p>
             </div>
-            <AddProjectForm clients={clients} onProjectAdded={fetchClientsAndProjects}/>
+            <AddProjectForm onProjectAdded={fetchProjects}/>
         </div>
         <ProjectsList projects={projects} onProjectDeleted={handleProjectDeleted} isLoading={isLoadingProjects}/>
     </div>

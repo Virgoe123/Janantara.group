@@ -1,10 +1,9 @@
 
-import { getClients, getProjects } from "@/lib/actions";
+import { getProjects } from "@/lib/actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import ProjectsView from "./projects-view";
 
-type Client = { id: string; name: string };
 type Project = {
   id: string;
   title: string;
@@ -12,31 +11,24 @@ type Project = {
   image_url: string | null;
   link: string | null;
   created_at: string;
-  clients: { name: string } | null;
 };
 
 export default async function ProjectsPage() {
-  const clientsResult = await getClients();
   const projectsResult = await getProjects();
 
-  const error = clientsResult.error || projectsResult.error;
-
-  if (error) {
+  if (projectsResult.error) {
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Error Loading Data</AlertTitle>
         <AlertDescription>
-          {`Could not load required data: ${error.message}`}
+          {`Could not load required data: ${projectsResult.error.message}`}
         </AlertDescription>
       </Alert>
     );
   }
 
   return <ProjectsView 
-            initialClients={clientsResult.data as Client[] || []} 
             initialProjects={(projectsResult.data as Project[]) || []} 
          />;
 }
-
-    

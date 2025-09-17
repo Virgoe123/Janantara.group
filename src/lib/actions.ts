@@ -7,7 +7,6 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import * as LucideIcons from "lucide-react";
-import {experimental_useFormState as useFormState} from 'react-dom';
 import { suggestServiceIcon } from '@/ai/flows/suggest-service-icon';
 
 export async function submitContactForm(data: { name: string; email: string; message:string }) {
@@ -114,7 +113,6 @@ const ProjectSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters."),
   description: z.string().optional(),
   link: z.string().url("Must be a valid URL.").optional().or(z.literal('')),
-  clientId: z.string().optional(),
   image: z
     .any()
     .refine((file) => file?.size > 0, "Project image is required.")
@@ -130,7 +128,6 @@ export async function addProject(prevState: LoginState, formData: FormData): Pro
     title: formData.get('title'),
     description: formData.get('description'),
     link: formData.get('link'),
-    clientId: formData.get('clientId'),
     image: formData.get('image'),
   });
 
@@ -138,7 +135,7 @@ export async function addProject(prevState: LoginState, formData: FormData): Pro
     return { errors: validatedFields.error.flatten().fieldErrors, message: 'Validation failed.', success: false };
   }
   
-  const { title, description, link, clientId, image } = validatedFields.data;
+  const { title, description, link, image } = validatedFields.data;
 
   // Upload image
   const imageFileName = `${Date.now()}-${image.name}`;
@@ -157,7 +154,6 @@ export async function addProject(prevState: LoginState, formData: FormData): Pro
     description: description || null,
     link: link || null,
     image_url: publicUrl,
-    client_id: clientId === '' || clientId === 'no-client' ? null : clientId
   };
 
   const { error: dbError } = await supabase.from('projects').insert([projectData]);
@@ -208,8 +204,7 @@ export async function getProjects() {
         description,
         image_url,
         link,
-        created_at,
-        clients ( name )
+        created_at
       `)
       .order('created_at', { ascending: false });
 }
