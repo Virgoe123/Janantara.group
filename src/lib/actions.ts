@@ -508,12 +508,12 @@ export async function updateTestimonial(prevState: LoginState, formData: FormDat
     };
   }
 
-    const { id, ...dataToUpdate } = validatedFields.data;
+  const { id, ...dataToUpdate } = validatedFields.data;
 
-    const { error } = await supabase
-        .from('testimonials')
-        .update(dataToUpdate)
-        .eq('id', id);
+  const { error } = await supabase
+    .from('testimonials')
+    .update(dataToUpdate)
+    .eq('id', id);
 
   if (error) {
     return { message: `Database Error: ${error.message}`, success: false };
