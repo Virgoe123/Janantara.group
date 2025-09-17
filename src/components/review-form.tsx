@@ -12,25 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Star, Send, LoaderCircle, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" disabled={pending} className="w-full text-lg">
-      {pending ? (
-        <>
-          <LoaderCircle className="mr-2 h-5 w-5 animate-spin" />
-          Submitting...
-        </>
-      ) : (
-        <>
-          <Send className="mr-2 h-5 w-5" />
-          Send My Review
-        </>
-      )}
-    </Button>
-  );
-}
-
 function StarRating({ rating, onRatingChange, error }: { rating: number; onRatingChange: (rating: number) => void; error?: string[] }) {
   const [hoverRating, setHoverRating] = useState(0);
 
@@ -95,24 +76,42 @@ export default function ReviewForm() {
     )
   }
 
+  function SubmitButton() {
+    const { pending } = useFormStatus();
+    return (
+      <Button type="submit" disabled={pending} className="w-full text-lg">
+        {pending ? (
+          <>
+            <LoaderCircle className="mr-2 h-5 w-5 animate-spin" />
+            Submitting...
+          </>
+        ) : (
+          <>
+            <Send className="mr-2 h-5 w-5" />
+            Send My Review
+          </>
+        )}
+      </Button>
+    );
+  }
+
   return (
     <form action={formAction} ref={formRef} className="space-y-6">
       <input type="hidden" name="rating" value={rating} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="name">Full Name</Label>
-          <Input id="name" name="name" placeholder="e.g., Sarah Johnson" required />
+          <Input id="name" name="name" required />
           {state?.errors?.name && <p className="text-sm font-medium text-destructive">{state.errors.name[0]}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="title">Your Title / Company (Optional)</Label>
-          <Input id="title" name="title" placeholder="e.g., CEO, Innovate Inc." />
-          {state?.errors?.title && <p className="text-sm font-medium text-destructive">{state.errors.title[0]}</p>}
+          <Input id="title" name="title" />
         </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="quote">Your Review</Label>
-        <Textarea id="quote" name="quote" placeholder="The service was outstanding! The final product exceeded all our expectations..." required rows={5} />
+        <Textarea id="quote" name="quote" required rows={5} />
         {state?.errors?.quote && <p className="text-sm font-medium text-destructive">{state.errors.quote[0]}</p>}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
