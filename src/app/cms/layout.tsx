@@ -13,7 +13,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-import { LayoutDashboard, LogOut, Settings, Home, Users, Briefcase, Wrench, Star, User } from "lucide-react";
+import { LayoutDashboard, LogOut, Settings, Home, Users, Briefcase, Wrench, Star, User, Phone } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/lib/actions";
@@ -52,6 +52,7 @@ export default async function CmsLayout({
     { href: "/cms/projects", icon: <Briefcase />, label: "Projects" },
     { href: "/cms/services", icon: <Wrench />, label: "Services" },
     { href: "/cms/testimonials", icon: <Star />, label: "Testimonials" },
+    { href: "/cms/contact", icon: <Phone />, label: "Contact Settings" },
   ];
 
   return (

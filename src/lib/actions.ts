@@ -610,9 +610,47 @@ export async function toggleTestimonialStatus(id: string, currentState: boolean)
     return { success: true, message };
 }
     
+// Contact Settings Actions
+const ContactSettingsSchema = z.object({
+    whatsapp: z.string().regex(/^\d+$/, { message: "Must be only digits" }).optional().or(z.literal('')),
+    email: z.string().email({ message: "Invalid email address" }).optional().or(z.literal('')),
+    instagram: z.string().optional(),
+});
 
-    
+export async function getContactSettings() {
+    const cookieStore = cookies();
+    const supabase = createClient(cookieStore);
+    return supabase.from('contact_settings').select('key, value');
+}
 
+export async function updateContactSettings(prevState: LoginState, formData: FormData): Promise<LoginState> {
+    const cookieStore = cookies();
+    const supabase = createClient(cookieStore);
 
+    const validatedFields = ContactSettingsSchema.safeParse({
+        whatsapp: formData.get('whatsapp'),
+        email: formData.get('email'),
+        instagram: formData.get('instagram'),
+    });
 
-    
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Validation failed.',
+            success: false,
+        };
+    }
+
+    const settingsToUpdate = Object.entries(validatedFields.data)
+        .map(([key, value]) => ({ key, value: value || '' }));
+
+    const { error } = await supabase.from('contact_settings').upsert(settingsToUpdate, { onConflict: 'key' });
+
+    if (error) {
+        return { message: `Database Error: ${error.message}`, success: false };
+    }
+
+    revalidatePath('/cms/contact');
+    revalidatePath('/#contact');
+    return { message: 'Contact settings updated successfully.', success: true };
+}
