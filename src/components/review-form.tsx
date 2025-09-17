@@ -53,7 +53,7 @@ function StarRating({ rating, onRatingChange, error }: { rating: number; onRatin
           />
         ))}
       </div>
-       {error && <p className="text-sm text-destructive">{error[0]}</p>}
+       {error && <p className="text-sm font-medium text-destructive">{error[0]}</p>}
     </div>
   );
 }
@@ -75,7 +75,7 @@ export default function ReviewForm() {
       formRef.current?.reset();
       setRating(0);
       setShowSuccess(true);
-    } else if (state?.message && !state.success) {
+    } else if (state?.message && !state.success && Object.keys(state.errors || {}).length > 0) {
       toast({
         variant: "destructive",
         title: "Action Failed",
@@ -102,18 +102,18 @@ export default function ReviewForm() {
         <div className="space-y-2">
           <Label htmlFor="name">Full Name</Label>
           <Input id="name" name="name" placeholder="e.g., Sarah Johnson" required />
-          {state?.errors?.name && <p className="text-sm text-destructive">{state.errors.name[0]}</p>}
+          {state?.errors?.name && <p className="text-sm font-medium text-destructive">{state.errors.name[0]}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="title">Your Title / Company (Optional)</Label>
           <Input id="title" name="title" placeholder="e.g., CEO, Innovate Inc." />
-          {state?.errors?.title && <p className="text-sm text-destructive">{state.errors.title[0]}</p>}
+          {state?.errors?.title && <p className="text-sm font-medium text-destructive">{state.errors.title[0]}</p>}
         </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="quote">Your Review</Label>
         <Textarea id="quote" name="quote" placeholder="The service was outstanding! The final product exceeded all our expectations..." required rows={5} />
-        {state?.errors?.quote && <p className="text-sm text-destructive">{state.errors.quote[0]}</p>}
+        {state?.errors?.quote && <p className="text-sm font-medium text-destructive">{state.errors.quote[0]}</p>}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         <StarRating 
@@ -124,7 +124,7 @@ export default function ReviewForm() {
         <div className="space-y-2">
           <Label htmlFor="avatar">Your Photo (Optional)</Label>
           <Input id="avatar" name="avatar" type="file" accept="image/*" className="file:text-foreground" />
-          {state?.errors?.avatar && <p className="text-sm text-destructive">{state.errors.avatar[0]}</p>}
+          {state?.errors?.avatar && <p className="text-sm font-medium text-destructive">{state.errors.avatar[0]}</p>}
         </div>
       </div>
       <div className="pt-4">
