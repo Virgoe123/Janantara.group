@@ -220,6 +220,7 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
                 </div>
             </div>
              <div className="flex items-center space-x-2 pt-4">
+                <input type="hidden" name="is_published" value="off" />
                 <Switch id="is_published" name="is_published" defaultChecked={testimonial.is_published} />
                 <Label htmlFor="is_published">Show on main page</Label>
              </div>
@@ -407,3 +408,5 @@ export default function TestimonialsView({ initialTestimonials }: { initialTesti
     </div>
   );
 }
+
+    
