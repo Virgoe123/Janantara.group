@@ -187,6 +187,8 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
   const dialogCloseRef = useRef<HTMLButtonElement>(null);
   const initialState: LoginState = { message: null };
   const [state, formAction] = useActionState(updateTestimonial, initialState);
+  const [status, setStatus] = useState(String(testimonial.is_published));
+
 
   useEffect(() => {
     if (state?.success) {
@@ -221,6 +223,7 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
         </DialogHeader>
         <form action={formAction}>
           <input type="hidden" name="id" value={testimonial.id} />
+          <input type="hidden" name="is_published" value={status} />
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -247,7 +250,7 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="is_published">Status</Label>
-                  <Select name="is_published" defaultValue={String(testimonial.is_published)}>
+                  <Select value={status} onValueChange={setStatus}>
                       <SelectTrigger id="is_published">
                           <SelectValue placeholder="Select status" />
                       </SelectTrigger>
@@ -443,5 +446,3 @@ export default function TestimonialsView({ initialTestimonials }: { initialTesti
     </div>
   );
 }
-
-    
