@@ -28,7 +28,6 @@ type Project = {
   description: string | null;
   thumbnail_url: string | null;
   image_urls: string[] | null;
-  link: string | null;
 };
 
 const ProjectCard = ({ project }: { project: Project }) => {
@@ -113,8 +112,8 @@ const ProjectCard = ({ project }: { project: Project }) => {
 }
 
 const ProjectSkeleton = () => (
-    <Card className="overflow-hidden flex flex-col md:flex-row">
-        <div className="aspect-[4/3] md:aspect-auto md:w-2/5 bg-muted">
+    <Card className="overflow-hidden flex flex-col md:flex-row h-[200px] md:h-[250px]">
+        <div className="md:w-2/5 bg-muted h-full">
             <Skeleton className="w-full h-full" />
         </div>
         <div className="md:w-3/5 p-4 flex flex-col">
@@ -168,21 +167,37 @@ export function Projects() {
 
        {error && <p className="text-center text-destructive py-4">{error}</p>}
        
-       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-            {isLoading ? (
-            Array.from({ length: 2 }).map((_, index) => (
+       {isLoading ? (
+         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            {Array.from({ length: 2 }).map((_, index) => (
                 <ProjectSkeleton key={index} />
-            ))
-            ) : projects && projects.length > 0 ? (
-            projects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
-            ))
-            ) : (
-                <div className="w-full text-center col-span-full py-12">
-                    <p className="text-muted-foreground">No projects have been added yet.</p>
-                </div>
-            )}
-        </div>
+            ))}
+         </div>
+       ) : projects && projects.length > 0 ? (
+          <Carousel
+            opts={{
+              align: "start",
+              loop: projects.length > 2,
+            }}
+            className="w-full max-w-6xl mx-auto"
+          >
+            <CarouselContent className="-ml-4">
+              {projects.map((project) => (
+                <CarouselItem key={project.id} className="pl-4 md:basis-1/2">
+                  <div className="h-[250px]">
+                     <ProjectCard project={project} />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden sm:flex" />
+            <CarouselNext className="hidden sm:flex" />
+          </Carousel>
+       ) : (
+          <div className="w-full text-center col-span-full py-12">
+              <p className="text-muted-foreground">No projects have been added yet.</p>
+          </div>
+       )}
       </div>
     </section>
   );
