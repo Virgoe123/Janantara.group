@@ -1,8 +1,7 @@
 
 'use client'
 
-import { useActionState, useRef, useEffect, useState, useCallback } from "react";
-import React from 'react';
+import React, { useActionState, useRef, useEffect, useState, useCallback } from "react";
 import { useFormStatus } from "react-dom";
 import Image from "next/image";
 import { getClients, getProjects, deleteProject, addProject, LoginState } from "@/lib/actions";
@@ -26,6 +25,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -45,7 +54,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Link as LinkIcon, Trash2 } from "lucide-react";
+import { Link as LinkIcon, Trash2, PlusCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -64,7 +73,7 @@ type Project = {
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending} className="w-full sm:w-auto">
+    <Button type="submit" disabled={pending}>
       {pending ? "Adding Project..." : "Add Project"}
     </Button>
   );
@@ -73,6 +82,7 @@ function SubmitButton() {
 function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProjectAdded: () => void }) {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
+  const dialogCloseRef = useRef<HTMLButtonElement>(null);
   const initialState: LoginState = { message: null };
   const [state, formAction] = useActionState(addProject, initialState);
 
@@ -84,6 +94,7 @@ function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProj
       });
       formRef.current?.reset();
       onProjectAdded();
+      dialogCloseRef.current?.click();
     } else if (state?.message && !state.success) {
         toast({
             variant: "destructive",
@@ -94,60 +105,73 @@ function AddProjectForm({ clients, onProjectAdded }: { clients: Client[], onProj
   }, [state, onProjectAdded, toast]);
 
   return (
-    <Card className="shadow-md">
-      <CardHeader>
-        <CardTitle className="text-xl">Add New Project</CardTitle>
-        <CardDescription>
-          Fill out the details to add a new project.
-        </CardDescription>
-      </CardHeader>
-      <form action={formAction} ref={formRef}>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Project Title</Label>
-              <Input id="title" name="title" placeholder="e.g., Awesome Mobile App" required />
-              {state?.errors?.title && <p className="text-sm text-destructive">{state.errors.title[0]}</p>}
+    <Dialog>
+      <DialogTrigger asChild>
+          <Button>
+              <PlusCircle className="mr-2 h-4 w-4" /> Add New Project
+          </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Add New Project</DialogTitle>
+          <DialogDescription>
+            Fill out the details to add a new project.
+          </DialogDescription>
+        </DialogHeader>
+        <form action={formAction} ref={formRef}>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Project Title</Label>
+                <Input id="title" name="title" placeholder="e.g., Awesome Mobile App" required />
+                {state?.errors?.title && <p className="text-sm text-destructive">{state.errors.title[0]}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="clientId">Client (Optional)</Label>
+                <Select name="clientId">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a client" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="no-client">No Client</SelectItem>
+                    {clients.map((client) => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {state?.errors?.clientId && <p className="text-sm text-destructive">{state.errors.clientId[0]}</p>}
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="clientId">Client (Optional)</Label>
-              <Select name="clientId">
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a client" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="no-client">No Client</SelectItem>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {state?.errors?.clientId && <p className="text-sm text-destructive">{state.errors.clientId[0]}</p>}
+              <Label htmlFor="link">Project Link (Optional)</Label>
+              <Input id="link" name="link" placeholder="https://example.com" />
+              {state?.errors?.link && <p className="text-sm text-destructive">{state.errors.link[0]}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description (Optional)</Label>
+              <Textarea id="description" name="description" placeholder="A short description of the project."/>
+              {state?.errors?.description && <p className="text-sm text-destructive">{state.errors.description[0]}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="image">Project Image</Label>
+              <Input id="image" name="image" type="file" required accept="image/*" className="file:text-foreground"/>
+              {state?.errors?.image && <p className="text-sm text-destructive">{state.errors.image[0]}</p>}
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="link">Project Link (Optional)</Label>
-            <Input id="link" name="link" placeholder="https://example.com" />
-            {state?.errors?.link && <p className="text-sm text-destructive">{state.errors.link[0]}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (Optional)</Label>
-            <Textarea id="description" name="description" placeholder="A short description of the project."/>
-             {state?.errors?.description && <p className="text-sm text-destructive">{state.errors.description[0]}</p>}
-          </div>
-           <div className="space-y-2">
-            <Label htmlFor="image">Project Image</Label>
-            <Input id="image" name="image" type="file" required accept="image/*" className="file:text-foreground"/>
-            {state?.errors?.image && <p className="text-sm text-destructive">{state.errors.image[0]}</p>}
-          </div>
-        </CardContent>
-        <CardFooter>
-          <SubmitButton />
-        </CardFooter>
-      </form>
-    </Card>
+          <DialogFooter>
+             <DialogClose asChild>
+                <Button type="button" variant="secondary">
+                    Cancel
+                </Button>
+              </DialogClose>
+            <SubmitButton />
+          </DialogFooter>
+        </form>
+        <DialogClose ref={dialogCloseRef} className="hidden" />
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -167,46 +191,42 @@ function ProjectsList({ projects, onProjectDeleted, isLoading }: { projects: Pro
     setIsDeleting(null);
   };
 
-   if (isLoading) {
-       return (
-        <Card className="shadow-md p-4">
-            <div className="space-y-4">
+  const ListContent = () => {
+       if (isLoading) {
+           return (
+             <TableBody>
                 {[...Array(3)].map((_, i) => (
-                    <div key={i} className="flex items-center space-x-4">
-                        <Skeleton className="h-16 w-16 rounded-md" />
-                        <div className="space-y-2 flex-grow">
-                            <Skeleton className="h-5 w-4/5" />
-                            <Skeleton className="h-4 w-3/5" />
-                        </div>
-                    </div>
+                   <TableRow key={i}>
+                        <TableCell><Skeleton className="h-16 w-16 rounded-md" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-8 w-8 inline-block" /></TableCell>
+                   </TableRow>
                 ))}
-            </div>
-        </Card>
-       )
-   }
+            </TableBody>
+           )
+       }
 
-   if (projects.length === 0) {
-    return <Card className="flex items-center justify-center p-12 shadow-md"><p className="text-center text-muted-foreground">No projects found. Add one to get started.</p></Card>;
-  }
+      if (projects.length === 0) {
+        return (
+            <TableBody>
+                <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">
+                        No projects found. Add one to get started.
+                    </TableCell>
+                </TableRow>
+            </TableBody>
+        );
+      }
 
-  return (
-     <Card className="shadow-md">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[80px]">Image</TableHead>
-            <TableHead>Title</TableHead>
-            <TableHead>Client</TableHead>
-            <TableHead>Link</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead className="text-right w-[100px]">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+      return (
+         <TableBody>
           {projects.map((project) => (
             <TableRow key={project.id} className={isDeleting === project.id ? 'opacity-50' : ''}>
               <TableCell>
-                {project.image_url && (
+                {project.image_url ? (
                   <Image 
                     src={project.image_url} 
                     alt={project.title} 
@@ -214,7 +234,7 @@ function ProjectsList({ projects, onProjectDeleted, isLoading }: { projects: Pro
                     height={64}
                     className="rounded-md object-cover h-16 w-16"
                   />
-                )}
+                ) : <div className="h-16 w-16 rounded-md bg-muted flex items-center justify-center text-xs text-muted-foreground">No Image</div>}
               </TableCell>
               <TableCell className="font-medium">{project.title}</TableCell>
                <TableCell>{project.clients?.name ?? 'N/A'}</TableCell>
@@ -255,6 +275,23 @@ function ProjectsList({ projects, onProjectDeleted, isLoading }: { projects: Pro
             </TableRow>
           ))}
         </TableBody>
+      )
+  }
+
+  return (
+     <Card>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[80px]">Image</TableHead>
+            <TableHead>Title</TableHead>
+            <TableHead>Client</TableHead>
+            <TableHead>Link</TableHead>
+            <TableHead>Created</TableHead>
+            <TableHead className="text-right w-[100px]">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <ListContent />
       </Table>
     </Card>
   )
@@ -293,7 +330,13 @@ export default function ProjectsView({ initialClients, initialProjects }: { init
   
   return (
     <div className="space-y-8">
-        <AddProjectForm clients={clients} onProjectAdded={fetchClientsAndProjects}/>
+        <div className="flex items-center justify-between">
+            <div>
+                <h1 className="text-2xl font-bold font-headline">Projects</h1>
+                <p className="text-muted-foreground">Manage your portfolio projects.</p>
+            </div>
+            <AddProjectForm clients={clients} onProjectAdded={fetchClientsAndProjects}/>
+        </div>
         <ProjectsList projects={projects} onProjectDeleted={handleProjectDeleted} isLoading={isLoadingProjects}/>
     </div>
   );

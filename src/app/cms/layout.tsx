@@ -50,9 +50,7 @@ export default async function CmsLayout({
   const menuItems = [
     { href: "/cms", icon: <LayoutDashboard />, label: "Dashboard" },
     { href: "/cms/projects", icon: <Briefcase />, label: "Projects" },
-    { href: "/cms/clients", icon: <Users />, label: "Clients" },
     { href: "/cms/services", icon: <Wrench />, label: "Services" },
-    { href: "/cms/settings", icon: <Settings />, label: "Settings" },
   ];
 
   return (
@@ -64,7 +62,7 @@ export default async function CmsLayout({
                 "group-data-[state=collapsed]:w-8 group-data-[state=expanded]:w-32"
             )}>
                 <Image src="https://res.cloudinary.com/dye07cjmn/image/upload/v1757992101/96b46217-0642-41b8-b06a-0ba5cb0d6572.png" alt="Janantara Logo" width={32} height={32} className="shrink-0" />
-                <span className="font-semibold text-lg text-sidebar-foreground group-data-[state=collapsed]:opacity-0 group-data-[state=collapsed]:w-0 transition-opacity duration-200">CMS</span>
+                <span className="font-semibold text-lg text-sidebar-foreground group-data-[state=collapsed]:opacity-0 group-data-[state=collapsed]:w-0 transition-opacity duration-200">Janantara</span>
             </Link>
         </SidebarHeader>
         <SidebarContent>
@@ -82,17 +80,6 @@ export default async function CmsLayout({
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className="p-2">
-           <Separator className="my-2 bg-sidebar-border" />
-           <SidebarMenu>
-             <SidebarMenuItem>
-                <SidebarMenuButton asChild variant="ghost" className="text-muted-foreground" tooltip="Back to Site">
-                  <Link href="/">
-                    <Home className="h-5 w-5" />
-                     <span className="group-data-[state=collapsed]:opacity-0 transition-opacity duration-200">Back to Site</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-           </SidebarMenu>
            <Separator className="my-2 bg-sidebar-border" />
           <LogoutButton />
         </SidebarFooter>

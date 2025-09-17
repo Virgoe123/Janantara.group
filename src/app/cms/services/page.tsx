@@ -7,8 +7,6 @@ import { addService, getServices, deleteService, LoginState } from "@/lib/action
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -34,10 +32,19 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Trash2, type LucideIcon } from "lucide-react";
+import { Trash2, type LucideIcon, PlusCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import * as LucideIcons from "lucide-react";
 
@@ -51,16 +58,16 @@ type Service = {
 function SubmitButton() {
     const { pending } = useFormStatus();
     return (
-        <Button type="submit" disabled={pending} className="w-full sm:w-auto">
+        <Button type="submit" disabled={pending}>
             {pending ? "Adding Service..." : "Add Service"}
         </Button>
     )
 }
 
-
 function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
     const { toast } = useToast();
     const formRef = useRef<HTMLFormElement>(null);
+    const dialogCloseRef = useRef<HTMLButtonElement>(null);
     const initialState: LoginState = { message: null };
     const [state, formAction] = useActionState(addService, initialState);
 
@@ -72,6 +79,7 @@ function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
           });
           formRef.current?.reset();
           onServiceAdded();
+          dialogCloseRef.current?.click();
       } else if (state?.message && !state.success) {
            toast({
             variant: "destructive",
@@ -82,31 +90,44 @@ function AddServiceForm({ onServiceAdded }: { onServiceAdded: () => void }) {
     }, [state, onServiceAdded, toast]);
 
     return (
-         <Card>
-            <CardHeader>
-            <CardTitle className="text-xl">Add New Service</CardTitle>
-            <CardDescription>
-                Fill out the details for the new service. An icon will be automatically suggested.
-            </CardDescription>
-            </CardHeader>
-            <form action={formAction} ref={formRef}>
-            <CardContent className="grid gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="title">Service Title</Label>
-                    <Input id="title" name="title" placeholder="e.g., Web Development" required />
-                    {state?.errors?.title && <p className="text-sm text-destructive">{state.errors.title[0]}</p>}
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea id="description" name="description" placeholder="Describe the service..." required />
-                    {state?.errors?.description && <p className="text-sm text-destructive">{state.errors.description[0]}</p>}
-                </div>
-            </CardContent>
-            <CardFooter>
-                 <SubmitButton />
-            </CardFooter>
-            </form>
-        </Card>
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add New Service
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>Add New Service</DialogTitle>
+                    <DialogDescription>
+                        Fill out the details for the new service. An icon will be automatically suggested.
+                    </DialogDescription>
+                </DialogHeader>
+                <form action={formAction} ref={formRef}>
+                    <div className="grid gap-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="title">Service Title</Label>
+                            <Input id="title" name="title" placeholder="e.g., Web Development" required />
+                            {state?.errors?.title && <p className="text-sm text-destructive">{state.errors.title[0]}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="description">Description</Label>
+                            <Textarea id="description" name="description" placeholder="Describe the service..." required />
+                            {state?.errors?.description && <p className="text-sm text-destructive">{state.errors.description[0]}</p>}
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="secondary">
+                                Cancel
+                            </Button>
+                        </DialogClose>
+                        <SubmitButton />
+                    </DialogFooter>
+                </form>
+                <DialogClose ref={dialogCloseRef} className="hidden" />
+            </DialogContent>
+        </Dialog>
     )
 }
 
@@ -126,48 +147,35 @@ function ServiceList({ services, onServiceDeleted, isLoading }: { services: Serv
     setIsDeleting(null);
   };
   
-  if (isLoading) {
+  const ListContent = () => {
+    if (isLoading) {
+      return (
+        <TableBody>
+            {[...Array(3)].map((_, i) => (
+                <TableRow key={i}>
+                    <TableCell><Skeleton className="h-6 w-6" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-full" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-8 w-8 inline-block" /></TableCell>
+                </TableRow>
+            ))}
+        </TableBody>
+      )
+    }
+
+    if (services.length === 0) {
+      return (
+         <TableBody>
+            <TableRow>
+                <TableCell colSpan={4} className="h-24 text-center">
+                    No services found. Add one to get started.
+                </TableCell>
+            </TableRow>
+        </TableBody>
+      );
+    }
+    
     return (
-        <Card>
-            <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[50px]">Icon</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {[...Array(3)].map((_, i) => (
-                        <TableRow key={i}>
-                            <TableCell><Skeleton className="h-6 w-6" /></TableCell>
-                            <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                            <TableCell><Skeleton className="h-5 w-full" /></TableCell>
-                            <TableCell className="text-right"><Skeleton className="h-8 w-8 inline-block" /></TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </Card>
-    )
-  }
-
-  if (services.length === 0) {
-    return <Card className="flex items-center justify-center p-12"><p className="text-center text-muted-foreground">No services found. Add one to get started.</p></Card>;
-  }
-
-  return (
-    <Card>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[50px]">Icon</TableHead>
-            <TableHead>Title</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead className="text-right w-[100px]">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
         <TableBody>
           {services.map((service) => {
             const Icon = service.icon ? (LucideIcons[service.icon as keyof typeof LucideIcons] as LucideIcon) : LucideIcons.Wrench;
@@ -208,6 +216,21 @@ function ServiceList({ services, onServiceDeleted, isLoading }: { services: Serv
             )
           })}
         </TableBody>
+    );
+  }
+
+  return (
+    <Card>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[50px]">Icon</TableHead>
+            <TableHead>Title</TableHead>
+            <TableHead>Description</TableHead>
+            <TableHead className="text-right w-[100px]">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <ListContent />
       </Table>
     </Card>
   );
@@ -242,13 +265,15 @@ export default function ServicesPage() {
   }
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <div className="xl:col-span-1">
+    <div className="space-y-8">
+        <div className="flex items-center justify-between">
+            <div>
+                <h1 className="text-2xl font-bold font-headline">Services</h1>
+                <p className="text-muted-foreground">Manage the services you offer.</p>
+            </div>
             <AddServiceForm onServiceAdded={handleServiceAdded} />
         </div>
-        <div className="xl:col-span-2">
-           <ServiceList services={services} onServiceDeleted={handleServiceDeleted} isLoading={isLoading}/>
-        </div>
+        <ServiceList services={services} onServiceDeleted={handleServiceDeleted} isLoading={isLoading}/>
     </div>
   );
 }

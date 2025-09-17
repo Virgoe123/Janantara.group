@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useEffect, useState, useTransition, useCallback, useActionState, useRef } from "react";
+import { useEffect, useState, useCallback, useActionState, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { addClient, getClients, deleteClient, LoginState } from "@/lib/actions";
 import {
@@ -34,16 +34,33 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Trash2 } from "lucide-react";
+import { PlusCircle, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-function SubmitButton() {
+function SubmitButton({onClose}: {onClose: () => void}) {
     const { pending } = useFormStatus();
+    
+    useEffect(() => {
+        if (!pending) {
+            // onClose(); This closes the dialog immediately, we want to wait for success
+        }
+    }, [pending]);
+
+
     return (
-        <Button type="submit" disabled={pending} className="w-full sm:w-auto">
+        <Button type="submit" disabled={pending}>
             {pending ? "Adding Client..." : "Add Client"}
         </Button>
     )
@@ -52,6 +69,7 @@ function SubmitButton() {
 function AddClientForm({ onClientAdded }: { onClientAdded: () => void }) {
     const { toast } = useToast();
     const formRef = useRef<HTMLFormElement>(null);
+    const dialogCloseRef = useRef<HTMLButtonElement>(null);
     const initialState: LoginState = { message: null };
     const [state, formAction] = useActionState(addClient, initialState);
 
@@ -63,6 +81,7 @@ function AddClientForm({ onClientAdded }: { onClientAdded: () => void }) {
             });
             formRef.current?.reset();
             onClientAdded();
+            dialogCloseRef.current?.click(); // Close dialog on success
         } else if (state?.message && !state.success) {
             toast({
               variant: "destructive",
@@ -73,15 +92,20 @@ function AddClientForm({ onClientAdded }: { onClientAdded: () => void }) {
     }, [state, onClientAdded, toast]);
 
     return (
-         <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="text-xl">Add New Client</CardTitle>
-              <CardDescription>
-                  Enter the name of the new client to add them to your list.
-              </CardDescription>
-            </CardHeader>
-            <form action={formAction} ref={formRef}>
-                <CardContent>
+        <Dialog>
+             <DialogTrigger asChild>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add New Client
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+                 <DialogHeader>
+                    <DialogTitle>Add New Client</DialogTitle>
+                    <DialogDescription>
+                        Enter the name of the new client to add them to your list.
+                    </DialogDescription>
+                 </DialogHeader>
+                 <form action={formAction} ref={formRef} className="space-y-4 py-4">
                     <div className="space-y-2">
                         <Label htmlFor="name">Client Name</Label>
                         <Input
@@ -89,16 +113,21 @@ function AddClientForm({ onClientAdded }: { onClientAdded: () => void }) {
                             name="name"
                             placeholder="e.g., Innovate Inc."
                             required
-                            className="max-w-lg"
                         />
                         {state?.errors?.name && <p className="text-sm text-destructive">{state.errors.name[0]}</p>}
                     </div>
-                </CardContent>
-                <CardFooter>
-                    <SubmitButton />
-                </CardFooter>
-            </form>
-        </Card>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="secondary">
+                                Cancel
+                            </Button>
+                         </DialogClose>
+                        <SubmitButton onClose={() => dialogCloseRef.current?.click()} />
+                    </DialogFooter>
+                 </form>
+                 <DialogClose ref={dialogCloseRef} className="hidden" />
+            </DialogContent>
+        </Dialog>
     )
 }
 
@@ -118,45 +147,34 @@ function ClientList({ clients, onClientDeleted, isLoading }: { clients: {id: str
     setIsDeleting(null);
   };
 
-  if (isLoading) {
-    return (
-        <Card>
-          <Table>
-              <TableHeader>
+  const ListContent = () => {
+    if (isLoading) {
+        return (
+            <TableBody>
+                {[...Array(3)].map((_, i) => (
+                    <TableRow key={i}>
+                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-8 w-8 inline-block" /></TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        )
+    }
+
+    if (clients.length === 0) {
+        return (
+            <TableBody>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                    <TableCell colSpan={3} className="h-24 text-center">
+                        No clients found. Add one to get started.
+                    </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                  {[...Array(3)].map((_, i) => (
-                      <TableRow key={i}>
-                          <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                          <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                          <TableCell className="text-right"><Skeleton className="h-8 w-8 inline-block" /></TableCell>
-                      </TableRow>
-                  ))}
-              </TableBody>
-          </Table>
-        </Card>
-    )
-  }
+            </TableBody>
+        );
+    }
 
-  if (clients.length === 0) {
-    return <Card className="flex items-center justify-center p-12"><p className="text-center text-muted-foreground">No clients found. Add one to get started.</p></Card>;
-  }
-
-  return (
-    <Card>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead className="text-right w-[100px]">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
+    return (
         <TableBody>
           {clients.map((client) => (
             <TableRow key={client.id} className={isDeleting === client.id ? 'opacity-50' : ''}>
@@ -191,6 +209,20 @@ function ClientList({ clients, onClientDeleted, isLoading }: { clients: {id: str
             </TableRow>
           ))}
         </TableBody>
+    );
+  }
+
+  return (
+    <Card>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Created</TableHead>
+            <TableHead className="text-right w-[100px]">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <ListContent />
       </Table>
     </Card>
   );
@@ -227,13 +259,15 @@ export default function ClientsPage() {
 
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">
+    <div className="space-y-8">
+        <div className="flex items-center justify-between">
+            <div>
+                <h1 className="text-2xl font-bold font-headline">Clients</h1>
+                <p className="text-muted-foreground">Manage your client list.</p>
+            </div>
             <AddClientForm onClientAdded={handleClientAdded} />
         </div>
-        <div className="lg:col-span-2">
-           <ClientList clients={clients} onClientDeleted={handleClientDeleted} isLoading={isLoading}/>
-        </div>
+        <ClientList clients={clients} onClientDeleted={handleClientDeleted} isLoading={isLoading}/>
     </div>
   );
 }
