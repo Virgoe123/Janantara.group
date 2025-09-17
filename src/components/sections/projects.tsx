@@ -38,8 +38,8 @@ const ProjectCard = ({ project }: { project: Project }) => {
   return (
     <Dialog>
       <Card className="overflow-hidden group h-full flex flex-col md:flex-row">
-        <DialogTrigger asChild disabled={!hasGallery} className="md:w-2/5">
-          <div className="aspect-[4/3] md:aspect-auto w-full relative" role={hasGallery ? 'button' : 'img'}>
+        <DialogTrigger asChild disabled={!hasGallery && !coverImage} className="md:w-2/5">
+          <div className="aspect-[4/3] md:aspect-auto w-full relative" role={hasGallery || coverImage ? 'button' : 'img'}>
             {coverImage ? (
               <Image
                 src={coverImage}
@@ -67,7 +67,7 @@ const ProjectCard = ({ project }: { project: Project }) => {
                       View Project <ArrowRight className="w-4 h-4" />
                   </a>
               )}
-               {hasGallery && (
+               {(hasGallery || coverImage) && (
                   <DialogTrigger asChild>
                     <button className="text-sm text-primary hover:underline font-semibold">View Gallery</button>
                   </DialogTrigger>
@@ -77,11 +77,21 @@ const ProjectCard = ({ project }: { project: Project }) => {
         </div>
       </Card>
 
-      {hasGallery && (
-          <DialogContent className="max-w-4xl p-0 border-0">
+      {(hasGallery || coverImage) && (
+          <DialogContent className="max-w-4xl p-2 sm:p-4 border-0">
+            <DialogHeader>
+                <DialogTitle>{project.title}</DialogTitle>
+            </DialogHeader>
               <Carousel className="w-full">
               <CarouselContent>
-                  {project.image_urls!.map((url, index) => (
+                  {coverImage && !hasGallery && (
+                    <CarouselItem>
+                         <div className="aspect-video relative">
+                            <Image src={coverImage} alt={`${project.title} image 1`} fill className="object-contain" />
+                         </div>
+                    </CarouselItem>
+                  )}
+                  {hasGallery && project.image_urls!.map((url, index) => (
                   <CarouselItem key={index}>
                       <div className="aspect-video relative">
                       <Image src={url} alt={`${project.title} image ${index + 1}`} fill className="object-contain" />
@@ -89,7 +99,7 @@ const ProjectCard = ({ project }: { project: Project }) => {
                   </CarouselItem>
                   ))}
               </CarouselContent>
-              {project.image_urls!.length > 1 && (
+              {hasGallery && project.image_urls!.length > 1 && (
                   <>
                       <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 z-10" />
                       <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 z-10" />
