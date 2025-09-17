@@ -1,15 +1,11 @@
 
 'use client'
 
-import React, { useActionState, useRef, useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import React, { useActionState, useRef, useEffect, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
-import Image from "next/image";
-import { getTestimonials, deleteTestimonial, addTestimonial, updateTestimonial, LoginState } from "@/lib/actions";
+import { deleteTestimonial, addTestimonial, updateTestimonial, toggleTestimonialStatus, LoginState } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,10 +39,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Star, Trash2, PlusCircle, User, Edit, EyeOff, Eye } from "lucide-react";
+import { Star, Trash2, PlusCircle, User, Edit, EyeOff, Eye, LoaderCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { getTestimonials } from "@/lib/actions";
+import { cn } from "@/lib/utils";
 
 export type Testimonial = {
   id: string;
@@ -122,6 +120,7 @@ function AddTestimonialForm({ onTestimonialAdded }: { onTestimonialAdded: () => 
         </DialogHeader>
         <form action={formAction} ref={formRef}>
           <input type="hidden" name="rating" value={rating} />
+          <input type="hidden" name="from_cms" value="true" />
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -180,6 +179,7 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
   const { toast } = useToast();
   const dialogCloseRef = useRef<HTMLButtonElement>(null);
   const initialState: LoginState = { message: null };
+  
   const [state, formAction] = useActionState(updateTestimonial, initialState);
 
   useEffect(() => {
@@ -254,6 +254,38 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
   );
 }
 
+function ToggleStatusButton({ id, isPublished }: { id: string, isPublished: boolean }) {
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
+
+  const handleToggle = () => {
+    startTransition(async () => {
+      const result = await toggleTestimonialStatus(id, isPublished);
+      if (result.success) {
+        toast({ title: "Success", description: result.message });
+      } else {
+        toast({ variant: "destructive", title: "Error", description: result.message });
+      }
+    });
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={handleToggle}
+      disabled={isPending}
+      className="group"
+    >
+      {isPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : 
+        isPublished ? 
+        <EyeOff className="h-4 w-4 text-yellow-600 group-hover:text-yellow-700" /> : 
+        <Eye className="h-4 w-4 text-green-600 group-hover:text-green-700" />}
+    </Button>
+  );
+}
+
+
 function TestimonialsList({ testimonials, onTestimonialDeleted, onTestimonialUpdated, isLoading }: { testimonials: Testimonial[], onTestimonialDeleted: (id:string) => void, onTestimonialUpdated: () => void, isLoading: boolean }) {
   const [isDeleting, setIsDeleting] = React.useState<string | null>(null);
   const { toast } = useToast();
@@ -281,7 +313,8 @@ function TestimonialsList({ testimonials, onTestimonialDeleted, onTestimonialUpd
                         <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-48" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                        <TableCell className="text-right"><Skeleton className="h-8 w-16 inline-block" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-8 w-24 inline-block" /></TableCell>
                    </TableRow>
                 ))}
             </TableBody>
@@ -292,7 +325,7 @@ function TestimonialsList({ testimonials, onTestimonialDeleted, onTestimonialUpd
         return (
             <TableBody>
                 <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
+                    <TableCell colSpan={7} className="h-24 text-center">
                         No testimonials found. Add one to get started.
                     </TableCell>
                 </TableRow>
@@ -303,7 +336,7 @@ function TestimonialsList({ testimonials, onTestimonialDeleted, onTestimonialUpd
       return (
          <TableBody>
           {testimonials.map((testimonial) => (
-            <TableRow key={testimonial.id} className={isDeleting === testimonial.id ? 'opacity-50' : ''}>
+            <TableRow key={testimonial.id} className={cn(isDeleting === testimonial.id ? 'opacity-50' : '', !testimonial.is_published && 'bg-muted/50')}>
               <TableCell>
                 <Avatar>
                     <AvatarImage src={testimonial.avatar_url || undefined} alt={testimonial.name} />
@@ -321,8 +354,14 @@ function TestimonialsList({ testimonials, onTestimonialDeleted, onTestimonialUpd
                     <span>{testimonial.rating}</span>
                 </div>
               </TableCell>
+              <TableCell>
+                 <Badge variant={testimonial.is_published ? "default" : "secondary"} className={testimonial.is_published ? "bg-green-100 text-green-800" : ""}>
+                    {testimonial.is_published ? "Published" : "Draft"}
+                 </Badge>
+              </TableCell>
               <TableCell className="text-right">
                 <div className="flex items-center justify-end">
+                    <ToggleStatusButton id={testimonial.id} isPublished={testimonial.is_published} />
                     <EditTestimonialForm testimonial={testimonial} onTestimonialUpdated={onTestimonialUpdated} />
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -366,6 +405,7 @@ function TestimonialsList({ testimonials, onTestimonialDeleted, onTestimonialUpd
             <TableHead>Title</TableHead>
             <TableHead>Quote</TableHead>
             <TableHead>Rating</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead className="text-right w-[120px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -401,7 +441,7 @@ export default function TestimonialsView({ initialTestimonials }: { initialTesti
         <div className="flex items-center justify-between">
             <div className="space-y-1">
                 <h1 className="text-3xl font-bold font-headline tracking-tight">Testimonials</h1>
-                <p className="text-muted-foreground">Manage client testimonials. All testimonials are published automatically.</p>
+                <p className="text-muted-foreground">Manage client testimonials. Drafts require approval to be published.</p>
             </div>
             <AddTestimonialForm onTestimonialAdded={fetchTestimonials}/>
         </div>
@@ -414,3 +454,5 @@ export default function TestimonialsView({ initialTestimonials }: { initialTesti
     </div>
   );
 }
+
+    

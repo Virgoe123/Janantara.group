@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useActionState, useRef, useState, useEffect } from "react";
@@ -67,7 +68,7 @@ export default function ReviewForm() {
         <div className="text-center py-12 space-y-4 flex flex-col items-center">
             <CheckCircle className="h-16 w-16 text-green-500"/>
             <h2 className="text-2xl font-bold font-headline">Thank You!</h2>
-            <p className="text-muted-foreground max-w-md">{state?.message || "Your review has been published. We appreciate you taking the time to share your feedback."}</p>
+            <p className="text-muted-foreground max-w-md">{state?.message || "Your review has been submitted for approval."}</p>
             <Button variant="outline" onClick={() => setShowSuccess(false)}>Submit Another Review</Button>
         </div>
     )
@@ -95,6 +96,7 @@ export default function ReviewForm() {
   return (
     <form action={formAction} ref={formRef} className="space-y-6">
       <input type="hidden" name="rating" value={rating} />
+      <input type="hidden" name="from_cms" value="false" />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="name">Full Name</Label>
@@ -130,3 +132,5 @@ export default function ReviewForm() {
     </form>
   );
 }
+
+    

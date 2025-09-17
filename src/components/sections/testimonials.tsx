@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -86,6 +87,7 @@ export function Testimonials() {
         const { data, error } = await supabase
             .from('testimonials')
             .select('*')
+            .eq('is_published', true)
             .order('created_at', { ascending: false });
         
         if (error) {
@@ -148,3 +150,5 @@ export function Testimonials() {
     </section>
   );
 }
+
+    

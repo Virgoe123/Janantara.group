@@ -286,6 +286,7 @@ const TestimonialSchema = z.object({
   quote: z.string().min(10, "Quote must be at least 10 characters."),
   rating: z.coerce.number().int().min(1, "Rating is required. Please select at least one star.").max(5),
   avatar: z.any().optional(),
+  is_published: z.boolean().default(false),
 });
 
 export async function addTestimonial(prevState: LoginState, formData: FormData): Promise<LoginState> {
@@ -294,12 +295,15 @@ export async function addTestimonial(prevState: LoginState, formData: FormData):
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
+  const fromCms = formData.get('from_cms') === 'true';
+
   const validatedFields = TestimonialSchema.safeParse({
     name: formData.get('name'),
     title: formData.get('title'),
     quote: formData.get('quote'),
     rating: formData.get('rating'),
     avatar: formData.get('avatar'),
+    is_published: fromCms,
   });
 
   if (!validatedFields.success) {
@@ -310,7 +314,7 @@ export async function addTestimonial(prevState: LoginState, formData: FormData):
     };
   }
 
-  const { name, quote, rating, avatar } = validatedFields.data;
+  const { name, quote, rating, avatar, is_published } = validatedFields.data;
   const title = validatedFields.data.title || "User";
   let avatar_url: string | null = null;
 
@@ -335,7 +339,7 @@ export async function addTestimonial(prevState: LoginState, formData: FormData):
       quote, 
       rating, 
       avatar_url,
-      is_published: true, // Always publish directly
+      is_published,
   };
 
   const { error: dbError } = await supabase.from('testimonials').insert([testimonialData]);
@@ -352,7 +356,12 @@ export async function addTestimonial(prevState: LoginState, formData: FormData):
 
   revalidatePath('/cms/testimonials');
   revalidatePath('/#testimonials');
-  return { message: 'Thank you! Your review has been published.', success: true };
+
+  const successMessage = fromCms 
+    ? 'Testimonial added successfully.'
+    : 'Thank you! Your review has been submitted for approval.';
+  
+  return { message: successMessage, success: true };
 }
 
 const UpdateTestimonialSchema = z.object({
@@ -438,5 +447,26 @@ export async function getTestimonials() {
       .order('created_at', { ascending: false });
 }
 
+export async function toggleTestimonialStatus(id: string, currentState: boolean) {
+    const supabase = createAdminClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { error } = await supabase
+        .from('testimonials')
+        .update({ is_published: !currentState })
+        .eq('id', id);
+
+    if (error) {
+        return { success: false, message: `Database Error: ${error.message}` };
+    }
+
+    revalidatePath('/cms/testimonials');
+    revalidatePath('/#testimonials');
+    const message = !currentState ? "Testimonial published." : "Testimonial unpublished.";
+    return { success: true, message };
+}
+    
 
     
