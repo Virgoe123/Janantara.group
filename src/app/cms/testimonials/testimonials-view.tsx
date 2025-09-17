@@ -160,6 +160,11 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
   const dialogCloseRef = useRef<HTMLButtonElement>(null);
   const initialState: LoginState = { message: null };
   const [state, formAction] = useActionState(updateTestimonial, initialState);
+  const [isPublished, setIsPublished] = useState(testimonial.is_published);
+
+  useEffect(() => {
+    setIsPublished(testimonial.is_published);
+  }, [testimonial.is_published]);
 
   useEffect(() => {
     if (state?.success) {
@@ -220,8 +225,12 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
                 </div>
             </div>
              <div className="flex items-center space-x-2 pt-4">
-                <input type="hidden" name="is_published" value="off" />
-                <Switch id="is_published" name="is_published" defaultChecked={testimonial.is_published} />
+                <input type="hidden" name="is_published" value={isPublished ? 'on' : 'off'} />
+                <Switch 
+                  id="is_published" 
+                  checked={isPublished}
+                  onCheckedChange={setIsPublished}
+                />
                 <Label htmlFor="is_published">Show on main page</Label>
              </div>
           </div>
@@ -408,5 +417,3 @@ export default function TestimonialsView({ initialTestimonials }: { initialTesti
     </div>
   );
 }
-
-    
