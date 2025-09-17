@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useActionState, useRef, useEffect } from "react";
+import { useActionState, useRef, useEffect, useState, useCallback } from "react";
 import React from 'react';
 import { useFormStatus } from "react-dom";
 import Image from "next/image";
@@ -169,31 +169,18 @@ function ProjectsList({ projects, onProjectDeleted, isLoading }: { projects: Pro
 
    if (isLoading) {
        return (
-        <Card className="shadow-md">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="w-[80px]">Image</TableHead>
-                        <TableHead>Title</TableHead>
-                        <TableHead>Client</TableHead>
-                        <TableHead>Link</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {[...Array(3)].map((_, i) => (
-                        <TableRow key={i}>
-                            <TableCell><Skeleton className="h-16 w-16 rounded-md" /></TableCell>
-                            <TableCell><Skeleton className="h-5 w-48" /></TableCell>
-                            <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                            <TableCell><Skeleton className="h-5 w-5" /></TableCell>
-                            <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                            <TableCell className="text-right"><Skeleton className="h-8 w-8 inline-block" /></TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+        <Card className="shadow-md p-4">
+            <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                    <div key={i} className="flex items-center space-x-4">
+                        <Skeleton className="h-16 w-16 rounded-md" />
+                        <div className="space-y-2 flex-grow">
+                            <Skeleton className="h-5 w-4/5" />
+                            <Skeleton className="h-4 w-3/5" />
+                        </div>
+                    </div>
+                ))}
+            </div>
         </Card>
        )
    }
@@ -269,17 +256,17 @@ function ProjectsList({ projects, onProjectDeleted, isLoading }: { projects: Pro
           ))}
         </TableBody>
       </Table>
-    </div>
+    </Card>
   )
 }
 
 export default function ProjectsView({ initialClients, initialProjects }: { initialClients: Client[], initialProjects: Project[] }) {
-  const [clients, setClients] = React.useState<Client[]>(initialClients);
-  const [projects, setProjects] = React.useState<Project[]>(initialProjects);
-  const [isLoadingProjects, setIsLoadingProjects] = React.useState(false);
+  const [clients, setClients] = useState<Client[]>(initialClients);
+  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const { toast } = useToast();
 
-  const fetchClientsAndProjects = React.useCallback(async () => {
+  const fetchClientsAndProjects = useCallback(async () => {
     setIsLoadingProjects(true);
     const [clientResult, projectResult] = await Promise.all([
         getClients(),
@@ -305,15 +292,9 @@ export default function ProjectsView({ initialClients, initialProjects }: { init
   }
   
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <div className="xl:col-span-1">
-            <AddProjectForm clients={clients} onProjectAdded={fetchClientsAndProjects}/>
-        </div>
-        <div className="xl:col-span-2">
-          <ProjectsList projects={projects} onProjectDeleted={handleProjectDeleted} isLoading={isLoadingProjects}/>
-        </div>
+    <div className="space-y-8">
+        <AddProjectForm clients={clients} onProjectAdded={fetchClientsAndProjects}/>
+        <ProjectsList projects={projects} onProjectDeleted={handleProjectDeleted} isLoading={isLoadingProjects}/>
     </div>
   );
 }
-
-    
