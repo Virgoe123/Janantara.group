@@ -49,10 +49,7 @@ export default function ReviewForm() {
 
   useEffect(() => {
     if (state?.success) {
-      toast({
-        title: "Review Submitted!",
-        description: state.message,
-      });
+      // Don't show toast on success, show the success message component instead
       formRef.current?.reset();
       setRating(0);
       setShowSuccess(true);
@@ -70,7 +67,7 @@ export default function ReviewForm() {
         <div className="text-center py-12 space-y-4 flex flex-col items-center">
             <CheckCircle className="h-16 w-16 text-green-500"/>
             <h2 className="text-2xl font-bold font-headline">Thank You!</h2>
-            <p className="text-muted-foreground max-w-md">Your review has been submitted for verification. We appreciate you taking the time to share your feedback.</p>
+            <p className="text-muted-foreground max-w-md">{state?.message || "Your review has been submitted for verification. We appreciate you taking the time to share your feedback."}</p>
             <Button variant="outline" onClick={() => setShowSuccess(false)}>Submit Another Review</Button>
         </div>
     )
@@ -107,6 +104,7 @@ export default function ReviewForm() {
         <div className="space-y-2">
           <Label htmlFor="title">Your Title / Company (Optional)</Label>
           <Input id="title" name="title" />
+           {state?.errors?.title && <p className="text-sm font-medium text-destructive">{state.errors.title[0]}</p>}
         </div>
       </div>
       <div className="space-y-2">

@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { z } from 'zod';
@@ -353,7 +354,7 @@ export async function addTestimonial(prevState: LoginState, formData: FormData):
 
   revalidatePath('/cms/testimonials');
   revalidatePath('/#testimonials');
-  return { message: 'Testimonial added successfully.', success: true };
+  return { message: 'Your review has been submitted for verification.', success: true };
 }
 
 const UpdateTestimonialSchema = z.object({
