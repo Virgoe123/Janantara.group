@@ -366,8 +366,10 @@ const UpdateTestimonialSchema = z.object({
 });
 
 export async function updateTestimonial(prevState: LoginState, formData: FormData): Promise<LoginState> {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const validatedFields = UpdateTestimonialSchema.safeParse({
     id: formData.get('id'),
