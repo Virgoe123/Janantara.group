@@ -387,9 +387,15 @@ export async function updateTestimonial(prevState: LoginState, formData: FormDat
     };
   }
 
-  const { id, ...testimonialData } = validatedFields.data;
+  const { id } = validatedFields.data;
 
-  const { error } = await supabase.from('testimonials').update(testimonialData).eq('id', id);
+  const { error } = await supabase.from('testimonials').update({
+    name: validatedFields.data.name,
+    title: validatedFields.data.title,
+    quote: validatedFields.data.quote,
+    rating: validatedFields.data.rating,
+  }).eq('id', id);
+
 
   if (error) {
     return { message: `Database Error: ${error.message}`, success: false };
@@ -436,3 +442,6 @@ export async function getTestimonials() {
       .select('*')
       .order('created_at', { ascending: false });
 }
+
+
+    
