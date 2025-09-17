@@ -2,6 +2,7 @@
 'use client'
 
 import React, { useActionState, useRef, useEffect, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { useFormStatus } from "react-dom";
 import Image from "next/image";
 import { getTestimonials, deleteTestimonial, addTestimonial, updateTestimonial, LoginState } from "@/lib/actions";
@@ -189,7 +190,6 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
   const [state, formAction] = useActionState(updateTestimonial, initialState);
   const [status, setStatus] = useState(String(testimonial.is_published));
 
-
   useEffect(() => {
     if (state?.success) {
       toast({
@@ -224,6 +224,7 @@ function EditTestimonialForm({ testimonial, onTestimonialUpdated }: { testimonia
         <form action={formAction}>
           <input type="hidden" name="id" value={testimonial.id} />
           <input type="hidden" name="is_published" value={status} />
+
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -446,3 +447,5 @@ export default function TestimonialsView({ initialTestimonials }: { initialTesti
     </div>
   );
 }
+
+    
