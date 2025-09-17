@@ -281,7 +281,7 @@ export async function getServices() {
 // Testimonial Actions
 const TestimonialSchema = z.object({
   name: z.string().min(2, "Name is required."),
-  title: z.string().min(2, "Title/company is required."),
+  title: z.string().optional(),
   quote: z.string().min(10, "Quote must be at least 10 characters."),
   rating: z.coerce.number().int().min(1, "Rating is required. Please select at least one star.").max(5),
   avatar: z.any().optional(),
@@ -310,7 +310,8 @@ export async function addTestimonial(prevState: LoginState, formData: FormData):
     };
   }
 
-  const { name, title, quote, rating, avatar } = validatedFields.data;
+  const { name, quote, rating, avatar } = validatedFields.data;
+  const title = validatedFields.data.title || "User";
   let avatar_url: string | null = null;
 
   // Handle optional avatar upload

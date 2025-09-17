@@ -79,7 +79,7 @@ export default function ReviewForm() {
       toast({
         variant: "destructive",
         title: "Action Failed",
-        description: state.message,
+        description: "Please check the form for errors.",
       });
     }
   }, [state, toast]);
@@ -105,8 +105,8 @@ export default function ReviewForm() {
           {state?.errors?.name && <p className="text-sm text-destructive">{state.errors.name[0]}</p>}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="title">Your Title / Company</Label>
-          <Input id="title" name="title" placeholder="e.g., CEO, Innovate Inc." required />
+          <Label htmlFor="title">Your Title / Company (Optional)</Label>
+          <Input id="title" name="title" placeholder="e.g., CEO, Innovate Inc." />
           {state?.errors?.title && <p className="text-sm text-destructive">{state.errors.title[0]}</p>}
         </div>
       </div>
