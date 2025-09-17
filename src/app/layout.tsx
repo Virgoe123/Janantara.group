@@ -21,6 +21,9 @@ const fontHeadline = Poppins({
 export const metadata: Metadata = {
   title: 'Janantara',
   description: 'Crafting Digital Excellence with Purpose and Precision.',
+  icons: {
+    icon: '/favicon.ico?v=1',
+  },
 };
 
 export default function RootLayout({
