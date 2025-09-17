@@ -98,17 +98,17 @@ export default async function CmsLayout({
            <LogoutButton />
         </SidebarFooter>
       </Sidebar>
-      <main className="flex min-h-screen flex-col">
-        <SidebarInset className="bg-secondary flex-1">
-            <header className="sticky top-0 z-40 flex h-16 items-center border-b bg-background/80 px-6 backdrop-blur-sm">
-            <SidebarTrigger className="-ml-2"/>
-            <div className="ml-auto">
-                {/* Future user menu */}
-            </div>
-            </header>
-            <div className="p-4 lg:p-8">{children}</div>
-        </SidebarInset>
-      </main>
+      <SidebarInset className="bg-secondary flex-1">
+          <header className="sticky top-0 z-40 flex h-16 items-center border-b bg-background/80 px-6 backdrop-blur-sm">
+          <SidebarTrigger className="-ml-2"/>
+          <div className="ml-auto">
+              {/* Future user menu */}
+          </div>
+          </header>
+          <main className="p-4 lg:p-8">
+            {children}
+          </main>
+      </SidebarInset>
     </SidebarProvider>
   );
 }
